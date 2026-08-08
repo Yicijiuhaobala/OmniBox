@@ -1,7 +1,7 @@
 import {
   Braces, Binary, KeyRound, Clock3, Regex, Image, Network,
   Sparkles, ScanText, Languages, ListCollapse, Code2, PenLine,
-  FileSearch, Files, FileOutput, CaseSensitive, ScanLine, NotebookPen, ShieldCheck, ClipboardList,
+  FileSearch, Files, FileOutput, CaseSensitive, ScanLine, NotebookPen, ShieldCheck, ClipboardList, GalleryVerticalEnd,
 } from 'lucide-react'
 
 export const tools = [
@@ -44,6 +44,11 @@ export const tools = [
     id: 'markdown', type: 'hybrid', title: 'Markdown 写作', subtitle: '编辑、预览、PDF 与写作辅助',
     description: '本地实时预览和导出 PDF，也可启用模型续写、生成目录或摘要。', icon: NotebookPen,
     color: 'blue', category: 'content',
+  },
+  {
+    id: 'social_card', type: 'card', title: '文本长图', subtitle: 'Markdown 转社交分享卡片',
+    description: '将文本或 Markdown 在本机排版为长图，选择背景、字体、阴影和金句样式后导出 PNG。', icon: GalleryVerticalEnd,
+    color: 'pink', category: 'content',
   },
   {
     id: 'office_assistant', type: 'hybrid', title: 'Excel / Word 助手', subtitle: '公式生成、表格与文档清理',
@@ -135,3 +140,4 @@ export const fileTools = tools.filter((tool) => tool.type === 'file')
 export const clipboardTools = tools.filter((tool) => tool.type === 'clipboard')
 export const advancedTools = tools.filter((tool) => tool.type === 'advanced')
 export const hybridTools = tools.filter((tool) => tool.type === 'hybrid')
+export const cardTools = tools.filter((tool) => tool.type === 'card')

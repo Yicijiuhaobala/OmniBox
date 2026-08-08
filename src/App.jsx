@@ -6,10 +6,11 @@ import {
   FilePlus2, Trash2, Play, Copy,
 } from 'lucide-react'
 import { api } from './api'
-import { advancedTools, aiTools, basicTools, clipboardTools, fileTools, hybridTools, tools } from './tools'
+import { advancedTools, aiTools, basicTools, cardTools, clipboardTools, fileTools, hybridTools, tools } from './tools'
 import AdvancedToolPage from './AdvancedTools'
 import ClipboardHistoryPage from './ClipboardHistory'
 import HybridToolPage from './HybridTools'
+import SocialCardPage from './SocialCard'
 
 const providerPresets = {
   openai: { label: 'OpenAI', base_url: 'https://api.openai.com/v1', model: 'gpt-4.1-mini' },
@@ -107,6 +108,8 @@ function App() {
               <AdvancedToolPage key={activeTool.id} tool={activeTool} goHome={goHome} />
             ) : activeTool?.type === 'hybrid' ? (
               <HybridToolPage key={activeTool.id} tool={activeTool} configured={configured} translationServices={translationServices} openSettings={() => setSettingsOpen(true)} goHome={goHome} />
+            ) : activeTool?.type === 'card' ? (
+              <SocialCardPage key={activeTool.id} tool={activeTool} goHome={goHome} />
             ) : (
               <ToolPage key={activeTool?.id} tool={activeTool} configured={configured} openSettings={() => setSettingsOpen(true)} goHome={goHome} />
             )
@@ -149,6 +152,7 @@ function Sidebar({ page, open, goHome, openSearch, openSettings, selectTool }) {
         {advancedTools.filter((tool) => tool.category === 'system').map((tool) => <SidebarTool key={tool.id} tool={tool} onClick={() => selectTool(tool)} />)}
         {basicTools.map((tool) => <SidebarTool key={tool.id} tool={tool} onClick={() => selectTool(tool)} />)}
         <div className="nav-label">写作与识别</div>
+        {cardTools.map((tool) => <SidebarTool key={tool.id} tool={tool} onClick={() => selectTool(tool)} />)}
         {hybridTools.map((tool) => <SidebarTool key={tool.id} tool={tool} onClick={() => selectTool(tool)} />)}
         <div className="nav-label">内容工具</div>
         {aiTools.slice(0, 3).map((tool) => <SidebarTool key={tool.id} tool={tool} onClick={() => selectTool(tool)} />)}
@@ -207,7 +211,7 @@ function HomePage({ configured, selectTool, openSettings }) {
 
       <SectionHeader eyebrow="CREATE" title="写作、翻译与识别" description="优先使用本地或专用服务，需要语义理解时再启用模型。" />
       <div className="tool-grid hybrid-grid-cards">
-        {hybridTools.map((tool, index) => <ToolCard key={tool.id} tool={tool} index={index} onClick={() => selectTool(tool)} />)}
+        {[...cardTools, ...hybridTools].map((tool, index) => <ToolCard key={tool.id} tool={tool} index={index} onClick={() => selectTool(tool)} />)}
       </div>
 
       <SectionHeader eyebrow="WRITING" title="内容工具" description="仅这些工具会使用你连接的模型服务。" />

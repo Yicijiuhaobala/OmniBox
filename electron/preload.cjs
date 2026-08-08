@@ -12,6 +12,7 @@ contextBridge.exposeInMainWorld('desktop', {
   showItemInFolder: (targetPath) => ipcRenderer.invoke('path:show', targetPath),
   setTheme: (theme) => ipcRenderer.send('theme:set', theme),
   exportMarkdownPdf: (payload) => ipcRenderer.invoke('markdown:export-pdf', payload),
+  exportSocialCardPng: (payload) => ipcRenderer.invoke('social-card:export-png', payload),
   clipboardHistory: {
     list: () => ipcRenderer.invoke('clipboard-history:list'),
     copy: (id) => ipcRenderer.invoke('clipboard-history:copy', id),

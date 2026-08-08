@@ -1,4 +1,4 @@
-const { app, BrowserWindow, clipboard, dialog, ipcMain, nativeImage, shell } = require('electron')
+const { app, BrowserWindow, clipboard, dialog, ipcMain, nativeImage, screen, shell } = require('electron')
 const path = require('path')
 const { spawn } = require('child_process')
 const http = require('http')
@@ -76,6 +76,100 @@ ipcMain.handle('markdown:export-pdf', async (_event, { title = 'Markdown 文档'
     return { canceled: false, error: `PDF 导出失败：${error.message}` }
   } finally {
     printWindow.destroy()
+  }
+})
+
+const SOCIAL_CARD_THEMES = {
+  paper: { background: 'linear-gradient(145deg, #f7f1e7 0%, #eee2d2 100%)', color: '#292724', accent: '#a65f38' },
+  ink: { background: 'linear-gradient(145deg, #111821 0%, #202d3a 100%)', color: '#f3f1eb', accent: '#7ca7c9' },
+  sunset: { background: 'linear-gradient(145deg, #7b3f3c 0%, #c6755f 100%)', color: '#fff8ee', accent: '#ffd49a' },
+  sage: { background: 'linear-gradient(145deg, #dce9df 0%, #f3efe5 100%)', color: '#25342d', accent: '#477661' },
+}
+const SOCIAL_CARD_FONTS = {
+  sans: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif',
+  serif: '"Songti SC", "STSong", Georgia, serif',
+  rounded: '"Hiragino Maru Gothic ProN", "Yuanti SC", "Microsoft YaHei", sans-serif',
+  mono: '"SFMono-Regular", Consolas, "Liberation Mono", monospace',
+}
+const clampNumber = (value, min, max, fallback) => Number.isFinite(Number(value)) ? Math.min(max, Math.max(min, Number(value))) : fallback
+const safeHex = (value, fallback) => /^#[0-9a-f]{6}$/i.test(String(value)) ? String(value) : fallback
+const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' })[char])
+
+ipcMain.handle('social-card:export-png', async (_event, payload = {}) => {
+  const title = String(payload.title || '分享卡片').replace(/[\\/:*?"<>|]/g, '_').slice(0, 80) || '分享卡片'
+  const targetWidth = [720, 900, 1080].includes(Number(payload.width)) ? Number(payload.width) : 1080
+  const fontSize = clampNumber(payload.fontSize, 26, 52, 36)
+  const padding = clampNumber(payload.padding, 40, 120, 84)
+  const theme = SOCIAL_CARD_THEMES[payload.theme] || {
+    background: safeHex(payload.customBackground, '#e9e1d5'),
+    color: safeHex(payload.customTextColor, '#292724'),
+    accent: safeHex(payload.accent, '#8b5c3e'),
+  }
+  const font = SOCIAL_CARD_FONTS[payload.font] || SOCIAL_CARD_FONTS.sans
+  const quoteStyle = ['line', 'panel', 'statement'].includes(payload.quoteStyle) ? payload.quoteStyle : 'line'
+  const signature = String(payload.signature || '').slice(0, 80)
+  const html = String(payload.html || '').slice(0, 500_000)
+  if (!html.trim()) return { canceled: false, error: '没有可导出的内容。' }
+
+  const result = await dialog.showSaveDialog({
+    title: '导出文本长图',
+    defaultPath: `${title}.png`,
+    filters: [{ name: 'PNG 图片', extensions: ['png'] }],
+  })
+  if (result.canceled || !result.filePath) return { canceled: true }
+
+  const scaleFactor = Math.max(1, screen.getPrimaryDisplay().scaleFactor || 1)
+  const cssWidth = Math.max(360, Math.round(targetWidth / scaleFactor))
+  const cssFontSize = fontSize / scaleFactor
+  const cssPadding = padding / scaleFactor
+  const exportWindow = new BrowserWindow({
+    show: false,
+    width: cssWidth,
+    height: 800,
+    backgroundColor: theme.color,
+    webPreferences: { sandbox: true, contextIsolation: true },
+  })
+  const documentHtml = `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:"><title>${escapeHtml(title)}</title><style>
+    * { box-sizing: border-box; } html, body { width: ${cssWidth}px; min-height: 100%; margin: 0; }
+    body { overflow: hidden; color: ${theme.color}; background: ${theme.background}; font: ${cssFontSize}px/1.72 ${font}; overflow-wrap: anywhere; }
+    .card { position: relative; width: 100%; min-height: ${Math.round(cssWidth * .72)}px; overflow: hidden; padding: ${cssPadding}px; }
+    .card::before { content: ''; position: absolute; width: 55%; aspect-ratio: 1; right: -23%; top: -14%; border: 1px solid ${theme.accent}2e; border-radius: 50%; }
+    .card::after { content: ''; position: absolute; width: 34%; aspect-ratio: 1; left: -17%; bottom: -10%; background: ${theme.accent}12; border-radius: 50%; filter: blur(2px); }
+    .content { position: relative; z-index: 1; ${payload.shadow ? `border: 1px solid ${theme.accent}24; border-radius: ${20 / scaleFactor}px; background: rgba(255,255,255,.075); box-shadow: 0 ${20 / scaleFactor}px ${65 / scaleFactor}px rgba(13,18,24,.16); padding: ${cssPadding * .72}px;` : ''} }
+    .content > :first-child { margin-top: 0; } .content > :last-child { margin-bottom: 0; }
+    h1,h2,h3,h4 { color: inherit; line-height: 1.24; letter-spacing: -.025em; margin: 1.25em 0 .5em; }
+    h1 { font-size: 1.72em; } h2 { font-size: 1.3em; } h3 { font-size: 1.1em; }
+    p { margin: .72em 0; } strong { color: ${theme.accent}; font-weight: 700; } a { color: ${theme.accent}; text-decoration-thickness: 1px; }
+    ul,ol { margin: .75em 0; padding-left: 1.35em; } li + li { margin-top: .3em; } li::marker { color: ${theme.accent}; }
+    hr { height: 1px; border: 0; background: ${theme.accent}40; margin: 1.5em 0; }
+    blockquote { margin: 1.2em 0; color: inherit; }
+    .quote-line blockquote { border-left: .14em solid ${theme.accent}; padding: .2em 0 .2em .85em; }
+    .quote-panel blockquote { border: 1px solid ${theme.accent}3d; border-radius: .55em; background: rgba(255,255,255,.1); padding: .85em 1em; }
+    .quote-statement blockquote { color: ${theme.accent}; font-size: 1.42em; font-weight: 700; line-height: 1.46; text-align: center; padding: .75em .3em; }
+    blockquote p { margin: 0; } code { border-radius: .24em; background: rgba(0,0,0,.11); padding: .08em .28em; font-family: ${SOCIAL_CARD_FONTS.mono}; font-size: .84em; }
+    pre { overflow: hidden; white-space: pre-wrap; border: 1px solid ${theme.accent}30; border-radius: .5em; background: rgba(0,0,0,.13); padding: .85em; }
+    pre code { background: none; padding: 0; } table { width: 100%; border-collapse: collapse; font-size: .78em; }
+    th,td { border: 1px solid ${theme.accent}35; padding: .48em .58em; text-align: left; } th { color: ${theme.accent}; }
+    footer { position: relative; z-index: 1; margin-top: ${cssPadding * .62}px; color: ${theme.color}a8; font-size: .54em; letter-spacing: .08em; text-align: right; }
+  </style></head><body><main class="card quote-${quoteStyle}"><section class="content">${html}</section>${signature.trim() ? `<footer>${escapeHtml(signature)}</footer>` : ''}</main></body></html>`
+
+  try {
+    await exportWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(documentHtml)}`)
+    const cssHeight = await exportWindow.webContents.executeJavaScript('Math.ceil(document.documentElement.scrollHeight)')
+    if (!Number.isFinite(cssHeight) || cssHeight < 1) throw new Error('无法测量卡片高度')
+    if (cssHeight * scaleFactor > 16_000) return { canceled: false, error: '内容过长，生成图片会超过 16000px。请缩小字号、页边距或分段导出。' }
+    exportWindow.setContentSize(cssWidth, cssHeight, false)
+    const captured = await exportWindow.webContents.capturePage({ x: 0, y: 0, width: cssWidth, height: cssHeight })
+    if (captured.isEmpty()) throw new Error('未能捕获卡片画面')
+    const resized = captured.getSize().width === targetWidth ? captured : captured.resize({ width: targetWidth, quality: 'best' })
+    const size = resized.getSize()
+    const fs = require('fs')
+    await fs.promises.writeFile(result.filePath, resized.toPNG())
+    return { canceled: false, path: result.filePath, width: size.width, height: size.height }
+  } catch (error) {
+    return { canceled: false, error: `PNG 导出失败：${error.message}` }
+  } finally {
+    if (!exportWindow.isDestroyed()) exportWindow.destroy()
   }
 })
 
