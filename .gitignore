@@ -1,0 +1,43 @@
+# Dependencies and virtual environments
+node_modules/
+.venv/
+venv/
+
+# Frontend, backend and installer outputs
+dist/
+backend-dist/
+release/
+output/
+work/
+
+# Python caches and test/tool caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Local indexes, IDE and OS metadata
+.codegraph/
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+*.local
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+
+# Generated icon source/working files; final build icons remain tracked
+build/icon-source-*.png
+build/*.iconset/
