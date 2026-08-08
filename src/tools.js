@@ -1,7 +1,7 @@
 import {
   Braces, Binary, KeyRound, Clock3, Regex, Image, Network,
   Sparkles, ScanText, Languages, ListCollapse, Code2, PenLine,
-  FileSearch, Files, FileOutput, CaseSensitive, ScanLine, NotebookPen, ShieldCheck,
+  FileSearch, Files, FileOutput, CaseSensitive, ScanLine, NotebookPen, ShieldCheck, ClipboardList,
 } from 'lucide-react'
 
 export const tools = [
@@ -19,6 +19,11 @@ export const tools = [
     id: 'batch_rename', type: 'file', title: '批量重命名', subtitle: '规则预览后一次完成',
     description: '通过名称、序号和扩展名模板批量整理文件，默认保留源文件。', icon: Files,
     color: 'orange', fileKind: 'any',
+  },
+  {
+    id: 'clipboard_history', type: 'clipboard', title: '超级剪贴板历史', subtitle: '最近 50 次文本与图片复制',
+    description: '在本机自动记录最近复制的文本和图片，支持搜索、重新复制、删除与一键清空。', icon: ClipboardList,
+    color: 'cyan', category: 'system',
   },
   {
     id: 'translate', type: 'hybrid', title: '文本翻译', subtitle: '有道 / 百度翻译与语义增强',
@@ -127,5 +132,6 @@ export const tools = [
 export const aiTools = tools.filter((tool) => tool.type === 'ai')
 export const basicTools = tools.filter((tool) => tool.type === 'basic')
 export const fileTools = tools.filter((tool) => tool.type === 'file')
+export const clipboardTools = tools.filter((tool) => tool.type === 'clipboard')
 export const advancedTools = tools.filter((tool) => tool.type === 'advanced')
 export const hybridTools = tools.filter((tool) => tool.type === 'hybrid')

@@ -1,6 +1,6 @@
 {
   "name": "omnibox-desktop",
-  "version": "0.7.1",
+  "version": "0.1.0",
   "private": true,
   "author": "OmniBox",
   "description": "A local-first desktop file and utility toolbox for Windows and macOS",

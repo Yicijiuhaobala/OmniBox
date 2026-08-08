@@ -6,8 +6,9 @@ import {
   FilePlus2, Trash2, Play, Copy,
 } from 'lucide-react'
 import { api } from './api'
-import { advancedTools, aiTools, basicTools, fileTools, hybridTools, tools } from './tools'
+import { advancedTools, aiTools, basicTools, clipboardTools, fileTools, hybridTools, tools } from './tools'
 import AdvancedToolPage from './AdvancedTools'
+import ClipboardHistoryPage from './ClipboardHistory'
 import HybridToolPage from './HybridTools'
 
 const providerPresets = {
@@ -98,7 +99,9 @@ function App() {
           {page === 'home' ? (
             <HomePage key="home" configured={configured} selectTool={selectTool} openSettings={() => setSettingsOpen(true)} />
           ) : (
-            activeTool?.type === 'file' ? (
+            activeTool?.type === 'clipboard' ? (
+              <ClipboardHistoryPage key={activeTool.id} tool={activeTool} goHome={goHome} />
+            ) : activeTool?.type === 'file' ? (
               <FileToolPage key={activeTool.id} tool={activeTool} configured={configured} openSettings={() => setSettingsOpen(true)} goHome={goHome} />
             ) : activeTool?.type === 'advanced' ? (
               <AdvancedToolPage key={activeTool.id} tool={activeTool} goHome={goHome} />
@@ -142,6 +145,7 @@ function Sidebar({ page, open, goHome, openSearch, openSettings, selectTool }) {
         <div className="nav-label">开发与数据</div>
         {advancedTools.filter((tool) => tool.category === 'data').map((tool) => <SidebarTool key={tool.id} tool={tool} onClick={() => selectTool(tool)} />)}
         <div className="nav-label">图像与系统</div>
+        {clipboardTools.map((tool) => <SidebarTool key={tool.id} tool={tool} onClick={() => selectTool(tool)} />)}
         {advancedTools.filter((tool) => tool.category === 'system').map((tool) => <SidebarTool key={tool.id} tool={tool} onClick={() => selectTool(tool)} />)}
         {basicTools.map((tool) => <SidebarTool key={tool.id} tool={tool} onClick={() => selectTool(tool)} />)}
         <div className="nav-label">写作与识别</div>
@@ -198,7 +202,7 @@ function HomePage({ configured, selectTool, openSettings }) {
 
       <SectionHeader eyebrow="UTILITIES" title="开发与日常工具" description="格式校验、编解码、文本、图片与网络诊断。" />
       <div className="tool-grid basic-grid">
-        {[...advancedTools, ...basicTools].map((tool, index) => <ToolCard key={tool.id} tool={tool} index={index} onClick={() => selectTool(tool)} />)}
+        {[...clipboardTools, ...advancedTools, ...basicTools].map((tool, index) => <ToolCard key={tool.id} tool={tool} index={index} onClick={() => selectTool(tool)} />)}
       </div>
 
       <SectionHeader eyebrow="CREATE" title="写作、翻译与识别" description="优先使用本地或专用服务，需要语义理解时再启用模型。" />

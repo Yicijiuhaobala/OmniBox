@@ -12,4 +12,15 @@ contextBridge.exposeInMainWorld('desktop', {
   showItemInFolder: (targetPath) => ipcRenderer.invoke('path:show', targetPath),
   setTheme: (theme) => ipcRenderer.send('theme:set', theme),
   exportMarkdownPdf: (payload) => ipcRenderer.invoke('markdown:export-pdf', payload),
+  clipboardHistory: {
+    list: () => ipcRenderer.invoke('clipboard-history:list'),
+    copy: (id) => ipcRenderer.invoke('clipboard-history:copy', id),
+    delete: (id) => ipcRenderer.invoke('clipboard-history:delete', id),
+    clear: () => ipcRenderer.invoke('clipboard-history:clear'),
+    onChanged: (callback) => {
+      const listener = (_event, entries) => callback(entries)
+      ipcRenderer.on('clipboard-history:changed', listener)
+      return () => ipcRenderer.removeListener('clipboard-history:changed', listener)
+    },
+  },
 })

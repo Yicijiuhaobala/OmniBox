@@ -35,9 +35,10 @@ except ImportError:
     from office import clean_office, execute_office_plan, office_context, parse_plan, resolve_office_file
 
 
-API_VERSION = 7
+APP_VERSION = "0.1.0"
+API_VERSION = APP_VERSION
 
-app = FastAPI(title="OmniBox Local API", version="0.7.1")
+app = FastAPI(title="OmniBox Local API", version=APP_VERSION)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "null"],

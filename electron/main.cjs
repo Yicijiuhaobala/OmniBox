@@ -1,10 +1,12 @@
-const { app, BrowserWindow, dialog, ipcMain, shell } = require('electron')
+const { app, BrowserWindow, clipboard, dialog, ipcMain, nativeImage, shell } = require('electron')
 const path = require('path')
 const { spawn } = require('child_process')
 const http = require('http')
 const net = require('net')
+const { createClipboardHistoryService } = require('./clipboard-history.cjs')
 
 let apiProcess = null
+const clipboardHistory = createClipboardHistoryService({ app, BrowserWindow, clipboard, ipcMain, nativeImage })
 
 ipcMain.handle('files:select', async (_event, kind = 'documents') => {
   const filters = {
@@ -159,7 +161,10 @@ async function createWindow() {
   })
 }
 
-app.whenReady().then(createWindow)
+app.whenReady().then(async () => {
+  await clipboardHistory.start()
+  await createWindow()
+})
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit()
 })
@@ -167,5 +172,6 @@ app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) createWindow()
 })
 app.on('before-quit', () => {
+  clipboardHistory.stop()
   if (apiProcess) apiProcess.kill()
 })
