@@ -6,6 +6,8 @@ const net = require('net')
 const { createClipboardHistoryService } = require('./clipboard-history.cjs')
 
 let apiProcess = null
+let apiPort = 8000
+let isQuitting = false
 const clipboardHistory = createClipboardHistoryService({ app, BrowserWindow, clipboard, ipcMain, nativeImage })
 
 ipcMain.handle('files:select', async (_event, kind = 'documents') => {
@@ -203,25 +205,81 @@ function findAvailablePort(start = 8000) {
 }
 
 function startProductionApi(port) {
-  if (!app.isPackaged) return
+  if (!app.isPackaged || apiProcess) return
   const executable = process.platform === 'win32' ? 'omnibox-backend.exe' : 'omnibox-backend'
   const backendPath = path.join(process.resourcesPath, 'backend', executable)
-  apiProcess = spawn(backendPath, [], {
+  const child = spawn(backendPath, [], {
     stdio: 'ignore',
+    detached: process.platform !== 'win32',
     windowsHide: true,
     env: { ...process.env, OMNIBOX_API_PORT: String(port) },
   })
+  apiProcess = child
+  child.once('exit', () => {
+    if (apiProcess === child) apiProcess = null
+  })
 }
 
-async function createWindow() {
-  const apiPort = app.isPackaged ? await findAvailablePort() : 8000
+function waitForProcessExit(child, timeoutMs) {
+  if (child.exitCode !== null || child.signalCode !== null) return Promise.resolve(true)
+  return new Promise((resolve) => {
+    let settled = false
+    const finish = (exited) => {
+      if (settled) return
+      settled = true
+      clearTimeout(timer)
+      child.removeListener('exit', onExit)
+      resolve(exited)
+    }
+    const onExit = () => finish(true)
+    const timer = setTimeout(() => finish(false), timeoutMs)
+    child.once('exit', onExit)
+  })
+}
+
+function signalApiProcess(child, signal) {
+  if (process.platform === 'win32') {
+    return new Promise((resolve) => {
+      const args = ['/pid', String(child.pid), '/T']
+      if (signal === 'SIGKILL') args.push('/F')
+      const taskkill = spawn('taskkill', args, { stdio: 'ignore', windowsHide: true })
+      taskkill.once('error', resolve)
+      taskkill.once('exit', resolve)
+    })
+  }
+
+  try {
+    process.kill(-child.pid, signal)
+  } catch (error) {
+    if (error.code !== 'ESRCH') console.error(`Failed to stop local API with ${signal}:`, error)
+  }
+  return Promise.resolve()
+}
+
+async function stopProductionApi() {
+  const child = apiProcess
+  apiProcess = null
+  if (!child || child.exitCode !== null || child.signalCode !== null) return
+
+  await signalApiProcess(child, 'SIGTERM')
+  const exited = await waitForProcessExit(child, 1500)
+  if (exited) return
+
+  await signalApiProcess(child, 'SIGKILL')
+  await waitForProcessExit(child, 1500)
+}
+
+async function startLocalApi() {
+  apiPort = app.isPackaged ? await findAvailablePort() : 8000
   startProductionApi(apiPort)
   try {
     await waitForApi(`http://127.0.0.1:${apiPort}/api/health`)
   } catch (error) {
     console.error(error)
   }
+}
 
+async function createWindow() {
   const window = new BrowserWindow({
     width: 1380,
     height: 880,
@@ -257,15 +315,23 @@ async function createWindow() {
 
 app.whenReady().then(async () => {
   await clipboardHistory.start()
+  await startLocalApi()
   await createWindow()
 })
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit()
+  app.quit()
 })
 app.on('activate', () => {
-  if (BrowserWindow.getAllWindows().length === 0) createWindow()
+  if (!isQuitting && BrowserWindow.getAllWindows().length === 0) createWindow()
 })
-app.on('before-quit', () => {
-  clipboardHistory.stop()
-  if (apiProcess) apiProcess.kill()
+app.on('before-quit', (event) => {
+  if (isQuitting) return
+  event.preventDefault()
+  isQuitting = true
+  Promise.resolve()
+    .then(() => clipboardHistory.stop())
+    .catch((error) => console.error('Failed to stop clipboard history:', error))
+    .then(() => stopProductionApi())
+    .catch((error) => console.error('Failed to stop local API:', error))
+    .finally(() => app.quit())
 })
