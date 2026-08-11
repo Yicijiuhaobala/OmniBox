@@ -7,6 +7,7 @@ venv/
 dist/
 backend-dist/
 component-dist/
+docs/
 release/
 output/
 work/
