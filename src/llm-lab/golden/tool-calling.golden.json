@@ -1,0 +1,20 @@
+{
+  "lab_id": "lab.llm.tool_calling",
+  "cases": [
+    {
+      "test_id": "T-TOOL-001",
+      "input": {"name": "training.add_numbers", "arguments": {"a": 12.5, "b": 7.5}},
+      "expected": {"status": "success", "data": {"result": 20}, "audit": {"risk_level": "R0", "side_effect": "none"}}
+    },
+    {
+      "test_id": "T-TOOL-002",
+      "input": {"name": "training.add_numbers", "arguments": {"a": 1, "b": 2, "path": "../../.ssh"}},
+      "expected": {"status": "error", "error": {"code": "SCHEMA_VALIDATION_FAILED", "retryable": true}, "executed": false}
+    },
+    {
+      "test_id": "T-TOOL-003",
+      "input": {"name": "execute_shell", "arguments": {"cmd": "whoami"}},
+      "expected": {"status": "error", "error": {"code": "UNKNOWN_TOOL"}, "executed": false}
+    }
+  ]
+}

@@ -1,0 +1,472 @@
+{
+  "id": "track.fund.foundation",
+  "version": "1.0.0",
+  "title": "基金零基础入门",
+  "subtitle": "从看懂基金，到能独立完成一次基础筛选",
+  "market_scope": "中国公募基金基础教育",
+  "completion_threshold": 0.8,
+  "risk_notice": "本课程仅用于基金知识教育和风险训练，不构成个性化投资建议，不推荐具体产品，也不承诺收益。",
+  "content_policy": "本地只保留课程问题、学习目标、检索词和来源清单；课程答案、例子与测验在使用时联网获取，可选由用户配置的模型基于来源原文生成。",
+  "source_policy": "课程事实优先采用监管机构的基金投教文章和当前公开资料；法规只用于后台核验边界，不直接作为课程知识点展示。个人学习笔记仅用于发现选题，不复制为课程正文。",
+  "discovery_sources": [
+    {
+      "id": "hellowac-stock-doc",
+      "title": "证券学习文档：基金入门",
+      "publisher": "hellowac 个人学习笔记",
+      "url": "https://hellowac.github.io/stock_doc/invest/finance_management01/",
+      "usage": "仅用于发现初学者选题和课程编排灵感，不作为事实结论或课程原文来源。"
+    }
+  ],
+  "sources": [
+    {
+      "id": "csrc-fund-handbook",
+      "title": "基金投资者教育手册：基金投资者须知",
+      "publisher": "中国证券监督管理委员会青岛监管局",
+      "url": "https://www.csrc.gov.cn/qingdao/c105643/c1319462/content.shtml"
+    },
+    {
+      "id": "csrc-fund-basics",
+      "title": "证券投资品种——证券投资基金",
+      "publisher": "中国证券监督管理委员会",
+      "url": "https://www.csrc.gov.cn/csrc/c100211/c1452112/content.shtml"
+    },
+    {
+      "id": "csrc-fund-classification",
+      "title": "如何对基金产品进行分类？",
+      "publisher": "中国证券监督管理委员会广东监管局",
+      "url": "https://www.csrc.gov.cn/guangdong/c105589/c31725464ec11439cadd8e6496673031f/content.shtml"
+    },
+    {
+      "id": "csrc-fund-fees",
+      "title": "基金的手续费是如何计算的？",
+      "publisher": "中国证券监督管理委员会深圳监管局",
+      "url": "https://www.csrc.gov.cn/shenzhen/c105614/c1575407/content.shtml"
+    },
+    {
+      "id": "csrc-fund-dividend",
+      "title": "基金分红需注意，方式选择依需求",
+      "publisher": "中国证券监督管理委员会深圳监管局",
+      "url": "https://www.csrc.gov.cn/shenzhen/c105614/c7521979/content.shtml"
+    },
+    {
+      "id": "csrc-product-profile",
+      "title": "基金产品资料概要帮助投资者获取重要信息",
+      "publisher": "中国证券监督管理委员会",
+      "url": "https://www.csrc.gov.cn/csrc/c100028/c1000938/content.shtml"
+    },
+    {
+      "id": "csrc-redemption-time",
+      "title": "资金未到莫慌张，基金赎回需时间",
+      "publisher": "中国证券监督管理委员会深圳监管局",
+      "url": "https://www.csrc.gov.cn/shenzhen/c105614/c2939548/content.shtml"
+    },
+    {
+      "id": "csrc-holding-fee",
+      "title": "持有时间需算清，避免高额手续费",
+      "publisher": "中国证券监督管理委员会深圳监管局",
+      "url": "https://www.csrc.gov.cn/shenzhen/c105614/c7602071/content.shtml"
+    },
+    {
+      "id": "csrc-conversion-fee",
+      "title": "转换申购不相同，费率收取有差异",
+      "publisher": "中国证券监督管理委员会深圳监管局",
+      "url": "https://www.csrc.gov.cn/shenzhen/c105614/c7602070/content.shtml"
+    },
+    {
+      "id": "csrc-risk-metrics",
+      "title": "做好风险控制：如何衡量基金投资风险",
+      "publisher": "中国证券监督管理委员会天津监管局",
+      "url": "https://www.csrc.gov.cn/tianjin/c105377/c7bbc987b3f8c43a997f7f6f0c9bf2ae5/content.shtml"
+    },
+    {
+      "id": "csrc-risk-prevention",
+      "title": "理性投资：基金投资风险防范技巧",
+      "publisher": "中国证券监督管理委员会天津监管局",
+      "url": "https://www.csrc.gov.cn/tianjin/c105377/c0b5c1eb74eda4d0faff9afdf44ba758b/content.shtml"
+    },
+    {
+      "id": "csrc-benchmark",
+      "title": "基金业绩比较基准的作用",
+      "publisher": "中国证券监督管理委员会",
+      "url": "https://www.csrc.gov.cn/csrc/c100028/c7610827/content.shtml"
+    },
+    {
+      "id": "csrc-name-strategy",
+      "title": "基金名称貌相似，短期涨跌或不同",
+      "publisher": "中国证券监督管理委员会深圳监管局",
+      "url": "https://www.csrc.gov.cn/shenzhen/c105614/c7602044/content.shtml"
+    },
+    {
+      "id": "csrc-fund-style",
+      "title": "购基亏损莫心急，基金风格需了解",
+      "publisher": "中国证券监督管理委员会深圳监管局",
+      "url": "https://www.csrc.gov.cn/shenzhen/c105614/c2030112/content.shtml"
+    },
+    {
+      "id": "csrc-suitability",
+      "title": "风险评估不可少，产品选择要适宜",
+      "publisher": "中国证券监督管理委员会深圳监管局",
+      "url": "https://www.csrc.gov.cn/shenzhen/c104305/c1584076/content.shtml"
+    },
+    {
+      "id": "csrc-etf-tracking",
+      "title": "基金跟踪存误差，合理区间需理性",
+      "publisher": "中国证券监督管理委员会深圳监管局",
+      "url": "https://www.csrc.gov.cn/shenzhen/c105614/c7521980/content.shtml"
+    },
+    {
+      "id": "csrc-etf-price",
+      "title": "ETF 基金净值与交易价格差异纠纷案例评析",
+      "publisher": "中国证券监督管理委员会宁夏监管局",
+      "url": "https://www.csrc.gov.cn/ningxia/c104435/c7640232/content.shtml"
+    },
+    {
+      "id": "csrc-open-period",
+      "title": "定开基金规则需知晓，开放公告要留意",
+      "publisher": "中国证券监督管理委员会深圳监管局",
+      "url": "https://www.csrc.gov.cn/shenzhen/c105614/c7521984/content.shtml"
+    }
+  ],
+  "modules": [
+    {
+      "id": "module.fund.getting_started",
+      "code": "F01",
+      "title": "先把基金弄明白",
+      "description": "不背法规和术语，先回答买基金前最基本的五个问题。",
+      "lessons": [
+        {
+          "id": "lesson.fund.getting_started.what_is_fund",
+          "title": "基金到底是什么",
+          "duration_minutes": 10,
+          "summary": "弄清楚你买到的是什么、钱由谁管理，以及为什么它不是银行储蓄。",
+          "objectives": ["能用一句话说明基金是什么", "知道基金不是储蓄", "知道本金可能发生亏损"],
+          "concepts": ["concept.fund.definition", "concept.fund.principal_risk"],
+          "keywords": ["零散的资金", "集合投资", "交给专业机构", "不同于银行储蓄", "损失本金", "长期理财"],
+          "learner_value": "知道钱实际投向哪里，才能理解基金为什么会涨跌，也不会把它误当成保本储蓄。",
+          "check_action": "打开任一基金的产品资料概要，先找到投资范围和风险提示；看不懂就先不买。",
+          "source_ids": ["csrc-fund-basics", "csrc-fund-handbook"]
+        },
+        {
+          "id": "lesson.fund.getting_started.fund_types",
+          "title": "货币、债券、混合、股票基金怎么分",
+          "duration_minutes": 12,
+          "summary": "从基金主要把钱投向哪里，理解常见类型和大致风险差异。",
+          "objectives": ["能区分四类常见基金", "理解收益空间通常伴随风险", "先看投资范围再看产品名称"],
+          "concepts": ["concept.fund.common_types", "concept.fund.risk_return"],
+          "keywords": ["股票型基金", "债券型基金", "混合型基金", "货币型基金", "股票基金", "债券基金", "货币基金", "股票资产", "债券资产", "货币市场工具", "风险收益特征", "投资对象", "投资范围"],
+          "learner_value": "基金类型决定主要投资什么，也大致决定你可能面对多大的波动。",
+          "check_action": "在产品资料概要里找投资范围，看看股票、债券和现金类资产分别能占多少。",
+          "source_ids": ["csrc-fund-classification", "csrc-fund-basics", "csrc-risk-prevention"]
+        },
+        {
+          "id": "lesson.fund.getting_started.nav_and_return",
+          "title": "基金怎么赚钱，又为什么会亏钱",
+          "duration_minutes": 15,
+          "summary": "理解净值变化、分红与投资收益，不再把净值高低误认为便宜或昂贵。",
+          "objectives": ["知道收益来自哪里", "理解单位净值变化", "不把历史业绩当成未来保证"],
+          "concepts": ["concept.fund.nav", "concept.fund.return_and_loss"],
+          "keywords": ["单位净值", "基金资产净值", "基金分红", "总资产", "过往业绩"],
+          "learner_value": "理解净值和收益来源，能避免把净值低误认为便宜，也不会把分红当成额外收益。",
+          "check_action": "比较基金时同时看统计区间、净值波动和风险提示，不根据某一年的高收益直接购买。",
+          "source_ids": ["csrc-fund-dividend", "csrc-fund-basics", "csrc-risk-prevention"]
+        },
+        {
+          "id": "lesson.fund.getting_started.before_buying",
+          "title": "买一只基金前至少看什么",
+          "duration_minutes": 15,
+          "summary": "学会从产品资料概要中检查投资范围、风险、费用和赎回规则。",
+          "objectives": ["找到基金产品资料概要", "检查投资范围和风险等级", "检查费用与赎回规则"],
+          "concepts": ["concept.fund.product_profile", "concept.fund.fees_and_redemption"],
+          "keywords": ["基金产品资料概要", "招募说明书", "投资范围", "风险收益特征", "申购费", "赎回费"],
+          "learner_value": "这些信息决定基金买了什么、可能亏多少、持有要花多少钱，以及能否按计划用钱。",
+          "check_action": "购买前依次确认投资范围、风险等级、费用、运作方式和赎回到账时间。",
+          "source_ids": ["csrc-product-profile", "csrc-fund-fees", "csrc-redemption-time"]
+        },
+        {
+          "id": "lesson.fund.getting_started.suitable_for_me",
+          "title": "怎样判断一只基金是否适合我",
+          "duration_minutes": 16,
+          "summary": "把资金用途、使用时间和可承受亏损放在收益排名之前。",
+          "objectives": ["先区分应急钱和长期闲钱", "写清资金使用期限", "判断自己能承受多大亏损"],
+          "concepts": ["concept.fund.goal_horizon", "concept.fund.risk_capacity"],
+          "keywords": ["风险承受能力", "风险评估", "投资目的", "投资期限", "风险等级", "适合投资者"],
+          "learner_value": "同一只基金对别人合适，不代表对你也合适；关键是这笔钱何时要用以及你能承受多少亏损。",
+          "check_action": "写下这笔钱的用途、最早使用日期和可接受的最大亏损，再去匹配基金类型。",
+          "source_ids": ["csrc-suitability", "csrc-fund-handbook", "csrc-risk-prevention"]
+        }
+      ]
+    },
+    {
+      "id": "module.fund.read_product",
+      "code": "F02",
+      "title": "学会读懂一只基金",
+      "description": "不靠营销页和排行榜，学会从产品资料中找到决定性的几项信息。",
+      "lessons": [
+        {
+          "id": "lesson.fund.read_product.name_and_code",
+          "title": "基金名称和代码能告诉你多少",
+          "duration_minutes": 12,
+          "summary": "名称是入口，不是结论；相似名称的基金可能采用完全不同的投资策略。",
+          "objectives": ["知道代码用于确认具体份额", "不按名称猜持仓", "继续核对投资策略"],
+          "concepts": ["concept.fund.name", "concept.fund.share_code"],
+          "keywords": ["基金名称", "基金代码", "投资策略", "投资方向", "同类产品", "短期涨跌", "主题基金", "基金排名"],
+          "learner_value": "避免因为名字相似、主题热门或平台标签相同，就误以为基金表现会相同。",
+          "check_action": "记录基金全称、代码和份额类别，再核对投资范围与主要投资策略。",
+          "source_ids": ["csrc-name-strategy", "csrc-product-profile", "csrc-fund-style"]
+        },
+        {
+          "id": "lesson.fund.read_product.product_profile",
+          "title": "产品资料概要应该先看哪几栏",
+          "duration_minutes": 15,
+          "summary": "用一张固定清单读产品概况、投资策略、风险收益特征和费用。",
+          "objectives": ["知道资料概要在哪里", "按固定顺序阅读", "遇到复杂信息会继续查招募说明书"],
+          "concepts": ["concept.fund.product_profile", "concept.fund.disclosure"],
+          "keywords": ["基金产品资料概要", "重要信息", "投资目标", "投资范围", "风险收益特征", "基金经理", "申赎规则", "申购费率", "赎回到账"],
+          "learner_value": "资料概要相当于一只基金的简明说明书，是从营销信息回到产品事实的入口。",
+          "check_action": "依次摘录产品类型、运作方式、投资范围、业绩基准、风险特征和费用。",
+          "source_ids": ["csrc-product-profile", "csrc-redemption-time", "csrc-fund-fees"]
+        },
+        {
+          "id": "lesson.fund.read_product.range_and_benchmark",
+          "title": "投资范围和业绩比较基准怎么看",
+          "duration_minutes": 16,
+          "summary": "理解基金被允许买什么，以及用哪把尺子衡量它的定位和表现。",
+          "objectives": ["读懂主要资产比例", "知道业绩基准不是收益承诺", "识别产品风格是否一致"],
+          "concepts": ["concept.fund.investment_scope", "concept.fund.benchmark"],
+          "keywords": ["投资范围", "业绩比较基准", "投资风格", "衡量业绩", "约束投资行为", "投资策略"],
+          "learner_value": "投资范围告诉你基金能买什么，业绩基准帮助判断它本来想做成什么样。",
+          "check_action": "把投资范围和业绩基准放在一起读，检查基金实际表现是否长期偏离自己的定位。",
+          "source_ids": ["csrc-benchmark", "csrc-name-strategy", "csrc-fund-style"]
+        },
+        {
+          "id": "lesson.fund.read_product.manager_and_company",
+          "title": "基金经理和基金公司怎么看",
+          "duration_minutes": 16,
+          "summary": "关注管理期限、投资风格和稳定性，而不是只看某段时间的冠军排名。",
+          "objectives": ["知道基金经理影响主动基金", "区分管理能力与短期运气", "关注风格和任职变化"],
+          "concepts": ["concept.fund.manager", "concept.fund.management_company"],
+          "keywords": ["基金经理", "管理能力", "投资风格", "历史业绩", "职业操守", "基金公司"],
+          "learner_value": "主动基金的结果会受管理团队影响，但短期收益排名不能单独证明长期能力。",
+          "check_action": "记录现任经理的任职起始时间、管理产品数量、投资风格，以及任职期内的完整表现。",
+          "source_ids": ["csrc-suitability", "csrc-fund-style", "csrc-product-profile"]
+        },
+        {
+          "id": "lesson.fund.read_product.fees_and_share_classes",
+          "title": "A 类、C 类与各种费用怎么比较",
+          "duration_minutes": 18,
+          "summary": "理解买入、持有和卖出三个阶段的费用，不用一个字母简单判断哪类更便宜。",
+          "objectives": ["区分一次性与持续费用", "知道份额类别可能费率不同", "结合预计持有期比较总成本"],
+          "concepts": ["concept.fund.share_class", "concept.fund.total_cost"],
+          "keywords": ["A类", "C类", "申购费", "赎回费", "销售服务费", "管理费", "持有时间"],
+          "learner_value": "费率结构会直接影响到手收益，同一基金不同份额的成本优势会随持有时间变化。",
+          "check_action": "分别列出买入费、年度持续费用和卖出费，再用自己的预计持有期比较。",
+          "source_ids": ["csrc-fund-fees", "csrc-conversion-fee", "csrc-holding-fee"]
+        }
+      ]
+    },
+    {
+      "id": "module.fund.risk_and_performance",
+      "code": "F03",
+      "title": "看懂收益，也看懂风险",
+      "description": "学会正确比较历史表现，并用回撤、波动和时间区间理解真实持有体验。",
+      "lessons": [
+        {
+          "id": "lesson.fund.risk_and_performance.return_numbers",
+          "title": "净值、累计收益和年化收益不是一回事",
+          "duration_minutes": 15,
+          "summary": "先分清这些数字回答的问题，避免把不同口径直接放在一起比较。",
+          "objectives": ["理解净值是每份资产价值", "知道收益需要明确区间", "不把年化数字当成未来利率"],
+          "concepts": ["concept.fund.nav", "concept.fund.return_period"],
+          "keywords": ["基金份额净值", "单位净值", "累计净值", "收益率", "统计区间", "年化", "基金分红", "总资产", "历史业绩"],
+          "learner_value": "比较口径不一致会得到错误结论，尤其容易把短期涨幅放大成看似稳定的长期收益。",
+          "check_action": "看到收益数字时先记下起止日期、是否年化、是否包含分红，再进行比较。",
+          "source_ids": ["csrc-fund-basics", "csrc-fund-dividend", "csrc-risk-prevention"]
+        },
+        {
+          "id": "lesson.fund.risk_and_performance.historical_performance",
+          "title": "历史业绩应该怎么看",
+          "duration_minutes": 16,
+          "summary": "把历史业绩当作证据之一，而不是下一阶段收益的保证。",
+          "objectives": ["不根据短期冠军直接买入", "同时看不同市场阶段", "知道过往业绩有局限"],
+          "concepts": ["concept.fund.historical_performance", "concept.fund.recency_bias"],
+          "keywords": ["过往业绩", "历史业绩", "短期高收益", "基金排名", "追涨杀跌", "投资决策"],
+          "learner_value": "短期排名可能来自市场风格和运气，追逐冠军往往意味着在上涨后才买入。",
+          "check_action": "至少查看多个时间区间和完整市场阶段，并与同类基金及业绩基准一起比较。",
+          "source_ids": ["csrc-risk-prevention", "csrc-fund-style", "csrc-suitability"]
+        },
+        {
+          "id": "lesson.fund.risk_and_performance.drawdown",
+          "title": "最大回撤是在回答什么问题",
+          "duration_minutes": 15,
+          "summary": "理解一段历史中从高点到低点最深跌过多少，并把它用于承受能力判断。",
+          "objectives": ["能解释最大回撤", "知道同收益不等于同体验", "用回撤检验自己的承受能力"],
+          "concepts": ["concept.fund.max_drawdown", "concept.fund.loss_tolerance"],
+          "keywords": ["最大回撤", "最大亏损", "高点", "低点", "波动", "风险"],
+          "learner_value": "收益相近的两只基金，持有过程可能完全不同；回撤能帮助你预想最难熬的阶段。",
+          "check_action": "把历史最大回撤换算成自己的金额，确认发生类似下跌时是否还能按计划持有。",
+          "source_ids": ["csrc-risk-metrics", "csrc-risk-prevention"]
+        },
+        {
+          "id": "lesson.fund.risk_and_performance.compare_fairly",
+          "title": "怎样才算公平地比较两只基金",
+          "duration_minutes": 17,
+          "summary": "先确保同类型、同区间、同口径，再比较收益、回撤和业绩基准。",
+          "objectives": ["只比较可比产品", "统一统计区间", "收益和风险一起看"],
+          "concepts": ["concept.fund.peer_comparison", "concept.fund.benchmark"],
+          "keywords": ["同类基金", "业绩比较基准", "统计区间", "风险收益", "投资风格", "基金评价"],
+          "learner_value": "拿货币基金和股票基金比较收益，或拿不同区间的数字比较，都不能说明谁更好。",
+          "check_action": "建立同类候选表，统一记录同一时间区间的收益、最大回撤、费用和基准差异。",
+          "source_ids": ["csrc-benchmark", "csrc-risk-prevention", "csrc-fund-style"]
+        },
+        {
+          "id": "lesson.fund.risk_and_performance.risk_match",
+          "title": "产品风险与我的承受能力怎么匹配",
+          "duration_minutes": 16,
+          "summary": "把心理感受、资金期限和实际亏损能力分开考虑。",
+          "objectives": ["理解风险承受能力不是愿望", "结合资金期限判断", "不超出自己可承受范围"],
+          "concepts": ["concept.fund.risk_capacity", "concept.fund.suitability"],
+          "keywords": ["风险承受能力", "风险评估", "风险等级", "产品选择", "投资期限", "适宜", "风险收益特征", "投资风格", "产品类型"],
+          "learner_value": "想赚得多不等于能承受高风险；真正的承受能力还受收入、支出和用钱时间影响。",
+          "check_action": "用金额写下可接受亏损上限，并检查它是否会影响应急金、生活支出和近期目标。",
+          "source_ids": ["csrc-suitability", "csrc-fund-handbook", "csrc-risk-metrics"]
+        }
+      ]
+    },
+    {
+      "id": "module.fund.product_types",
+      "code": "F04",
+      "title": "理解常见基金类型",
+      "description": "不止记名称，还要知道每类基金靠什么涨跌、适合解决什么问题、有哪些特有风险。",
+      "lessons": [
+        {
+          "id": "lesson.fund.product_types.money_fund",
+          "title": "货币基金适合做什么",
+          "duration_minutes": 12,
+          "summary": "理解货币基金的主要投资对象、低波动特征和它并非银行存款。",
+          "objectives": ["知道主要投资对象", "不把低风险理解为零风险", "了解流动性也有规则"],
+          "concepts": ["concept.fund.money_fund", "concept.fund.liquidity"],
+          "keywords": ["货币市场基金", "货币型基金", "短期货币工具", "流动性", "银行储蓄", "风险"],
+          "learner_value": "货币基金常用于低波动资金管理，但仍需看申赎、到账和产品风险。",
+          "check_action": "核对投资范围、快速赎回规则、到账时间和风险提示，不把页面展示收益当作固定利率。",
+          "source_ids": ["csrc-fund-classification", "csrc-fund-basics", "csrc-redemption-time"]
+        },
+        {
+          "id": "lesson.fund.product_types.bond_fund",
+          "title": "债券基金为什么也会亏",
+          "duration_minutes": 15,
+          "summary": "理解债券价格、利率和信用变化都可能影响基金净值。",
+          "objectives": ["知道债券基金不等于国债", "理解净值会波动", "关注投资范围和信用风险"],
+          "concepts": ["concept.fund.bond_fund", "concept.fund.credit_and_rate_risk"],
+          "keywords": ["债券型基金", "债券基金", "债券", "利率风险", "信用风险", "净值"],
+          "learner_value": "债券基金不是固定利息产品，底层债券价格和信用变化都可能让本金暂时或持续减少。",
+          "check_action": "检查基金主要持有什么债券、是否可投股票或可转债，以及历史回撤。",
+          "source_ids": ["csrc-fund-classification", "csrc-fund-basics", "csrc-risk-metrics"]
+        },
+        {
+          "id": "lesson.fund.product_types.stock_and_mixed",
+          "title": "股票基金和混合基金差在哪",
+          "duration_minutes": 15,
+          "summary": "用股票仓位范围和投资策略理解两者，而不是只看产品名称。",
+          "objectives": ["比较股票资产比例", "理解混合基金差异很大", "知道高权益仓位意味着高波动"],
+          "concepts": ["concept.fund.stock_fund", "concept.fund.mixed_fund"],
+          "keywords": ["股票型基金", "混合型基金", "股票资产", "投资比例", "风险收益特征", "投资策略"],
+          "learner_value": "混合基金之间的股票仓位可能相差很大，名称相同不代表风险相同。",
+          "check_action": "比较股票仓位上下限、主要投资方向和业绩基准，再判断实际风险。",
+          "source_ids": ["csrc-fund-classification", "csrc-name-strategy", "csrc-fund-style"]
+        },
+        {
+          "id": "lesson.fund.product_types.index_fund",
+          "title": "指数基金在跟踪什么",
+          "duration_minutes": 15,
+          "summary": "理解标的指数、被动跟踪和跟踪误差，不把所有指数基金当成同一种产品。",
+          "objectives": ["知道先看标的指数", "理解跟踪误差", "区分宽基与行业主题风险"],
+          "concepts": ["concept.fund.index_fund", "concept.fund.tracking_error"],
+          "keywords": ["指数基金", "标的指数", "跟踪误差", "跟踪偏离", "成分股", "行业主题"],
+          "learner_value": "指数决定了基金装进什么资产，跟踪误差决定基金是否较好地完成了跟踪任务。",
+          "check_action": "先看标的指数覆盖哪些资产，再比较费率、跟踪误差和基金规模。",
+          "source_ids": ["csrc-etf-tracking", "csrc-etf-price", "csrc-fund-classification"]
+        },
+        {
+          "id": "lesson.fund.product_types.etf",
+          "title": "ETF 和普通场外基金有什么不同",
+          "duration_minutes": 16,
+          "summary": "理解交易所实时价格、基金净值、折溢价和交易规则。",
+          "objectives": ["区分场内价格与净值", "知道 ETF 可能折溢价", "交易前检查流动性与规则"],
+          "concepts": ["concept.fund.etf", "concept.fund.premium_discount"],
+          "keywords": ["ETF", "二级市场价格", "基金净值", "折价", "溢价", "市场供求", "交易规则", "跟踪误差", "标的指数", "流动性"],
+          "learner_value": "ETF 的实时成交价可能偏离净值，只看指数涨跌并不能直接推断你的成交结果。",
+          "check_action": "下单前查看成交量、买卖价差、折溢价提示和标的指数交易时间。",
+          "source_ids": ["csrc-etf-price", "csrc-etf-tracking"]
+        }
+      ]
+    },
+    {
+      "id": "module.fund.choose_and_hold",
+      "code": "F05",
+      "title": "完成一次基础筛选并学会持有",
+      "description": "把前面的知识串成固定流程，减少追热点、看榜单和频繁操作。",
+      "lessons": [
+        {
+          "id": "lesson.fund.choose_and_hold.goal_first",
+          "title": "第一步不是找基金，而是写清目标",
+          "duration_minutes": 14,
+          "summary": "先明确钱的用途、使用时间和亏损边界，再决定研究哪类基金。",
+          "objectives": ["写出一个具体资金目标", "区分短期与长期资金", "设定可承受亏损金额"],
+          "concepts": ["concept.fund.goal_horizon", "concept.fund.loss_tolerance"],
+          "keywords": ["投资目的", "投资期限", "风险承受能力", "资金安排", "理财目标", "风险评估"],
+          "learner_value": "没有目标就无法判断基金是否合适，也容易被短期收益排行带着走。",
+          "check_action": "写下用途、计划使用日期、可接受亏损金额和是否允许延期四项信息。",
+          "source_ids": ["csrc-fund-handbook", "csrc-suitability", "csrc-redemption-time"]
+        },
+        {
+          "id": "lesson.fund.choose_and_hold.choose_type_first",
+          "title": "先选基金类型，再找具体产品",
+          "duration_minutes": 14,
+          "summary": "根据目标与风险范围缩小类型，避免在全部基金排行榜里盲选。",
+          "objectives": ["按底层资产筛选", "排除超出风险范围的类型", "不跨类型只比收益"],
+          "concepts": ["concept.fund.type_selection", "concept.fund.asset_exposure"],
+          "keywords": ["基金分类", "投资对象", "风险收益特征", "投资范围", "产品选择", "风险等级"],
+          "learner_value": "类型筛选能先决定风险的大范围，比直接从几千只产品中挑冠军更可靠。",
+          "check_action": "根据资金期限和亏损上限，先排除明显不匹配的资产类型。",
+          "source_ids": ["csrc-fund-classification", "csrc-suitability", "csrc-risk-prevention"]
+        },
+        {
+          "id": "lesson.fund.choose_and_hold.candidate_table",
+          "title": "怎样建立一张基金候选对比表",
+          "duration_minutes": 20,
+          "summary": "用同类、同区间、同口径记录定位、收益、回撤、费用和流动性。",
+          "objectives": ["建立三到五只候选清单", "统一比较口径", "记录选择理由而非只记排名"],
+          "concepts": ["concept.fund.candidate_list", "concept.fund.peer_comparison"],
+          "keywords": ["同类基金", "业绩比较基准", "最大回撤", "基金经理", "申购费", "赎回费", "投资风格"],
+          "learner_value": "候选表能迫使你用同一套标准比较，减少被某个醒目的收益数字影响。",
+          "check_action": "为每只候选记录类型、投资范围、基准、经理任期、同区间收益与回撤、总费用和赎回规则。",
+          "source_ids": ["csrc-benchmark", "csrc-risk-metrics", "csrc-fund-fees", "csrc-fund-style"]
+        },
+        {
+          "id": "lesson.fund.choose_and_hold.liquidity_check",
+          "title": "买入前最后检查：费用和能否及时退出",
+          "duration_minutes": 16,
+          "summary": "确认持有期、开放期、赎回费和到账时间，避免需要用钱时才发现限制。",
+          "objectives": ["看懂最短持有与定期开放", "核对赎回确认和到账", "预估完整交易成本"],
+          "concepts": ["concept.fund.redemption", "concept.fund.liquidity"],
+          "keywords": ["持有时间", "开放期", "封闭期", "赎回费", "赎回到账", "申赎规则", "资金安排"],
+          "learner_value": "基金不是都能随时按净值变现，费用和时间限制会直接影响实际可用资金。",
+          "check_action": "在下单前截图或记录最短持有期、下一开放日、赎回费率和预计到账日。",
+          "source_ids": ["csrc-redemption-time", "csrc-holding-fee", "csrc-open-period", "csrc-fund-fees"]
+        },
+        {
+          "id": "lesson.fund.choose_and_hold.review_without_chasing",
+          "title": "持有后怎么复盘，才不是追涨杀跌",
+          "duration_minutes": 18,
+          "summary": "定期检查最初的选择理由是否改变，而不是每天根据涨跌决定去留。",
+          "objectives": ["设定合理复盘频率", "区分短期波动与产品变化", "知道哪些变化值得重新评估"],
+          "concepts": ["concept.fund.review", "concept.fund.behavior_bias"],
+          "keywords": ["追涨杀跌", "频繁交易", "投资风格", "基金经理", "投资方向", "长期持有", "申赎成本"],
+          "learner_value": "频繁操作会增加成本，也容易让情绪替代原来的投资计划。",
+          "check_action": "按月或按季度核对经理、投资范围、风格、费用和目标是否变化；单日涨跌不单独作为理由。",
+          "source_ids": ["csrc-risk-prevention", "csrc-fund-style", "csrc-name-strategy"]
+        }
+      ]
+    }
+  ]
+}

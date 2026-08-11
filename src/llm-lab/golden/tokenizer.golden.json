@@ -1,0 +1,19 @@
+{
+  "test_id": "T-TOK-001",
+  "lab_id": "lab.llm.tokenizer_visualizer",
+  "input": {
+    "text": "low lower",
+    "tokenizer_id": "omb-grapheme-bpe-v1",
+    "normalization": "NFC",
+    "show_merge_trace": true
+  },
+  "expected": {
+    "tokens": [
+      {"piece": "low</w>", "token_id": 100, "utf8_start": 0, "utf8_end": 3},
+      {"piece": "low", "token_id": 101, "utf8_start": 4, "utf8_end": 7},
+      {"piece": "er</w>", "token_id": 102, "utf8_start": 7, "utf8_end": 9}
+    ],
+    "counts": {"utf8_bytes": 9, "code_points": 9, "graphemes": 9, "tokens": 3}
+  },
+  "tolerance": 0
+}

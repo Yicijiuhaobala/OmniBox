@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "templates": [
+    { "id": "weekly", "name": "项目周报", "detail": "进展、指标、风险、计划", "style": "executive", "version": "1.0.0", "download_url": "weekly.json", "size": 781, "sha256": "68db525df08b5e7732dd853792ede9702d29d80c7576601f7cadf92982534a5f" },
+    { "id": "monthly", "name": "经营月报", "detail": "目标、趋势、归因、行动", "style": "data", "version": "1.0.0", "download_url": "monthly.json", "size": 729, "sha256": "bbad55fdfc8517be14389373af8a4362d3af91ea06f776bc5833e3c11a1a689f" },
+    { "id": "performance", "name": "述职汇报", "detail": "职责、业绩、复盘、规划", "style": "minimal", "version": "1.0.0", "download_url": "performance.json", "size": 799, "sha256": "ae93dd5a34d90744a05b417adf8ec337461ab858b478adb2e96be1c5614cd5ea" },
+    { "id": "project", "name": "项目汇报", "detail": "背景、方案、里程碑、风险", "style": "blueprint", "version": "1.0.0", "download_url": "project.json", "size": 792, "sha256": "0d29aaca3374ee4003a380850e99a2897f906237605c2296c9ae6206990ea5e7" },
+    { "id": "training", "name": "培训课件", "detail": "目标、知识点、练习、总结", "style": "academic", "version": "1.0.0", "download_url": "training.json", "size": 775, "sha256": "370572e4b9ee948981da37c3c6b7660386f3c8e2d011b958d168f171f4ee8039" }
+  ]
+}

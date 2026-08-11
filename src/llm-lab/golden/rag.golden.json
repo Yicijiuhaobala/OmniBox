@@ -1,0 +1,21 @@
+{
+  "test_id": "T-RAG-001",
+  "lab_id": "lab.llm.rag_debugger",
+  "input": {
+    "chunks": [
+      {"chunk_id": "chunk-01", "text": "cat sat mat"},
+      {"chunk_id": "chunk-02", "text": "cat ate fish"},
+      {"chunk_id": "chunk-03", "text": "dog ate fish"}
+    ],
+    "query": "cat fish",
+    "retrieval": {"engine": "omb-bm25-v1", "k1": 1.5, "b": 0.75, "top_k": 3, "min_score": 0}
+  },
+  "expected": {
+    "results": [
+      {"chunk_id": "chunk-02", "score": 0.9400072584914712},
+      {"chunk_id": "chunk-01", "score": 0.47000362924573563},
+      {"chunk_id": "chunk-03", "score": 0.47000362924573563}
+    ]
+  },
+  "tolerance": 1e-12
+}

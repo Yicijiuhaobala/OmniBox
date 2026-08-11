@@ -1,0 +1,30 @@
+{
+  "test_id": "T-EVAL-001",
+  "lab_id": "lab.llm.eval_runner",
+  "input": {
+    "dataset_id": "dataset.fixture-eval.v1",
+    "dataset_version": "1.0.0",
+    "target_type": "fixture_outputs",
+    "cases": [
+      {"id": "case-01", "outcome": "passed"}, {"id": "case-02", "outcome": "passed"},
+      {"id": "case-03", "outcome": "passed"}, {"id": "case-04", "outcome": "passed"},
+      {"id": "case-05", "outcome": "passed"}, {"id": "case-06", "outcome": "passed"},
+      {"id": "case-07", "outcome": "passed"}, {"id": "case-08", "outcome": "failed"},
+      {"id": "case-09", "outcome": "execution_error"}, {"id": "case-10", "outcome": "scoring_error"}
+    ],
+    "scorers": [{"type": "exact_match", "version": "1.0.0"}]
+  },
+  "expected": {
+    "summary": {
+      "total_cases": 10,
+      "eligible_cases": 8,
+      "passed_cases": 7,
+      "task_pass_rate": 0.875,
+      "execution_errors": 1,
+      "execution_error_rate": 0.1,
+      "scoring_errors": 1,
+      "scoring_error_rate": 0.1
+    }
+  },
+  "tolerance": 0
+}

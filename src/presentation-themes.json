@@ -1,0 +1,11 @@
+[
+  { "id": "executive", "name": "沉稳商务", "detail": "米白、深蓝与克制金色，适合周报、述职和项目汇报", "layout": "standard", "bg": "F4F0E7", "panel": "FFFFFF", "ink": "17212A", "muted": "60707C", "accent": "176B87", "accent2": "DFAF55", "font": "sans" },
+  { "id": "editorial", "name": "编辑部", "detail": "纸张感、衬线标题与暖红强调，适合方案和内容型分享", "layout": "editorial", "bg": "F5EBDD", "panel": "FFFDFC", "ink": "36241F", "muted": "80665C", "accent": "B74835", "accent2": "E5A84B", "font": "serif" },
+  { "id": "signal", "name": "深色信号", "detail": "深绿底与金色信号，适合发布、路演和技术演讲", "layout": "signal", "bg": "102A2A", "panel": "173636", "ink": "F4EBDD", "muted": "B7C9C2", "accent": "E6C75B", "accent2": "EA795F", "font": "condensed" },
+  { "id": "minimal", "name": "留白极简", "detail": "大留白、细线和黑白层级，适合高管摘要与短汇报", "layout": "minimal", "bg": "FAFAF8", "panel": "FFFFFF", "ink": "181A1B", "muted": "6C7073", "accent": "181A1B", "accent2": "A8ADB1", "font": "sans" },
+  { "id": "data", "name": "数据仪表盘", "detail": "蓝紫数据色与卡片网格，适合经营分析、月报和指标复盘", "layout": "data", "bg": "EEF3F8", "panel": "FFFFFF", "ink": "15243A", "muted": "5E6F82", "accent": "356AE6", "accent2": "7B61FF", "font": "sans" },
+  { "id": "academic", "name": "学术讲义", "detail": "暖白底、墨绿与章节编号，适合培训课件和研究汇报", "layout": "academic", "bg": "F6F3EA", "panel": "FFFDF7", "ink": "24322C", "muted": "66736D", "accent": "2E6B52", "accent2": "B88A3B", "font": "serif" },
+  { "id": "blueprint", "name": "科技蓝图", "detail": "深蓝网格、青色高亮，适合技术方案、架构与产品发布", "layout": "blueprint", "bg": "0B1830", "panel": "132645", "ink": "EEF7FF", "muted": "A5B8CE", "accent": "51D6E8", "accent2": "5C8DFF", "font": "mono" },
+  { "id": "coral", "name": "活力珊瑚", "detail": "暖橙、珊瑚与大色块，适合品牌提案、活动复盘和创意分享", "layout": "coral", "bg": "FFF2E9", "panel": "FFFFFF", "ink": "3C2625", "muted": "84635E", "accent": "E65F4C", "accent2": "F3A43B", "font": "rounded" },
+  { "id": "mono", "name": "黑白纪实", "detail": "高对比黑白、编号与摄影版式，适合案例、作品集和复盘", "layout": "mono", "bg": "F0F0EE", "panel": "FFFFFF", "ink": "101112", "muted": "616366", "accent": "101112", "accent2": "8A8D91", "font": "sans" }
+]

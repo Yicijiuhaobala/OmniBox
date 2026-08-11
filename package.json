@@ -1,0 +1,93 @@
+{
+  "name": "omnibox-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "author": "OmniBox",
+  "description": "A local-first desktop file and utility toolbox for Windows and macOS",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "dev": "concurrently -k \"npm:dev:api\" \"npm:dev:web\" \"npm:dev:electron\"",
+    "dev:api": "python3 backend/main.py",
+    "dev:web": "vite",
+    "dev:electron": "wait-on tcp:8000 tcp:5173 && electron .",
+    "test:labs": "node --test tests/llm-lab-runtime.test.mjs",
+    "test:learning-backend": "python3 -m unittest discover -s tests -p 'test_*learning_api.py'",
+    "test:learning": "npm run test:labs && npm run test:learning-backend",
+    "size:report": "node scripts/package-size-report.mjs",
+    "size:check": "node scripts/package-size-report.mjs --check",
+    "build:web": "vite build",
+    "build:backend": "python3 -m PyInstaller --noconfirm --distpath backend-dist --workpath work/pyinstaller backend/omnibox-backend.spec",
+    "build:vision": "python3 -m PyInstaller --noconfirm --distpath component-dist --workpath work/pyinstaller-vision backend/omnibox-vision-runtime.spec && node scripts/prepare-vision-component.mjs",
+    "build": "npm run build:web && npm run build:backend && electron-builder",
+    "build:mac": "npm run build:web && npm run build:backend && electron-builder --mac && npm run size:check",
+    "build:win": "npm run build:web && npm run build:backend && electron-builder --win"
+  },
+  "dependencies": {
+    "pptxgenjs": "^4.0.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6.0.5",
+    "concurrently": "^10.0.4",
+    "dompurify": "^3.4.13",
+    "electron": "^43.3.0",
+    "electron-builder": "^26.15.3",
+    "framer-motion": "^13.0.0",
+    "highlight.js": "^11.11.1",
+    "lucide-react": "^1.30.0",
+    "marked": "^18.0.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "vite": "^8.2.1",
+    "wait-on": "^9.1.0"
+  },
+  "build": {
+    "appId": "com.omnibox.desktop",
+    "productName": "OmniBox",
+    "directories": {
+      "output": "release"
+    },
+    "compression": "maximum",
+    "electronLanguages": [
+      "zh_CN",
+      "zh-CN",
+      "en",
+      "en-US"
+    ],
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "src/presentation-themes.json",
+      "third_party/**/*",
+      "LICENSE",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "backend-dist",
+        "to": "backend",
+        "filter": [
+          "omnibox-backend*"
+        ]
+      }
+    ],
+    "mac": {
+      "category": "public.app-category.productivity",
+      "icon": "build/icon.icns",
+      "target": [
+        "dmg",
+        "zip"
+      ]
+    },
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}

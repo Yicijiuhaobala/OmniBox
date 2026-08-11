@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://omnibox.local/schemas/llm-lab/rag.contract.schema.json",
+  "title": "Local BM25 RAG debugger contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["lab_id", "input", "output"],
+  "properties": {
+    "lab_id": {"const": "lab.llm.rag_debugger"},
+    "input": {
+      "type": "object", "additionalProperties": false,
+      "required": ["chunks", "query", "retrieval"],
+      "properties": {
+        "chunks": {
+          "type": "array", "minItems": 1, "maxItems": 500,
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["chunk_id", "text"],
+            "properties": {
+              "chunk_id": {"type": "string", "minLength": 1, "maxLength": 100},
+              "text": {"type": "string", "minLength": 1, "maxLength": 50000}
+            }
+          }
+        },
+        "query": {"type": "string", "minLength": 1, "maxLength": 8000},
+        "retrieval": {
+          "type": "object", "additionalProperties": false,
+          "required": ["engine", "k1", "b", "top_k", "min_score"],
+          "properties": {
+            "engine": {"const": "omb-bm25-v1"},
+            "k1": {"type": "number", "exclusiveMinimum": 0, "maximum": 5},
+            "b": {"type": "number", "minimum": 0, "maximum": 1},
+            "top_k": {"type": "integer", "minimum": 1, "maximum": 10},
+            "min_score": {"type": "number", "minimum": 0}
+          }
+        }
+      }
+    },
+    "output": {
+      "type": "object", "additionalProperties": false,
+      "required": ["index", "query", "results"],
+      "properties": {
+        "index": {"type": "object"},
+        "query": {"type": "object"},
+        "results": {"type": "array", "maxItems": 10, "items": {"type": "object"}}
+      }
+    }
+  }
+}
