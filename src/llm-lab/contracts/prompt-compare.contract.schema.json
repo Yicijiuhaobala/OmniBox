@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://omnibox.local/schemas/llm-lab/prompt-compare.contract.schema.json",
+  "title": "Prompt compare contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["lab_id", "input", "output"],
+  "properties": {
+    "lab_id": {"const": "lab.llm.prompt_compare"},
+    "input": {
+      "type": "object", "additionalProperties": false,
+      "required": ["variants", "cases", "mode", "repetitions", "checks", "blind_manual_review"],
+      "properties": {
+        "variants": {"type": "array", "minItems": 2, "maxItems": 4, "items": {"type": "object"}},
+        "cases": {"type": "array", "minItems": 1, "maxItems": 20, "items": {"type": "object"}},
+        "mode": {"enum": ["static_fixture", "configured_model"]},
+        "repetitions": {"type": "integer", "minimum": 1, "maximum": 3},
+        "checks": {"type": "array", "maxItems": 20, "items": {"type": "object"}},
+        "blind_manual_review": {"type": "boolean"}
+      }
+    },
+    "output": {
+      "type": "object", "additionalProperties": false,
+      "required": ["run_plan", "items", "summary_by_variant", "partial_failure_count"],
+      "properties": {
+        "run_plan": {"type": "object"},
+        "items": {"type": "array", "maxItems": 240, "items": {"type": "object"}},
+        "summary_by_variant": {"type": "array", "maxItems": 4, "items": {"type": "object"}},
+        "partial_failure_count": {"type": "integer", "minimum": 0}
+      }
+    }
+  }
+}

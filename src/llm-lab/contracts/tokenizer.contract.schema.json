@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://omnibox.local/schemas/llm-lab/tokenizer.contract.schema.json",
+  "title": "Tokenizer visualizer contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["lab_id", "input", "output"],
+  "properties": {
+    "lab_id": {"const": "lab.llm.tokenizer_visualizer"},
+    "input": {"$ref": "#/$defs/input"},
+    "output": {"$ref": "#/$defs/output"}
+  },
+  "$defs": {
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["text", "tokenizer_id", "normalization", "show_merge_trace"],
+      "properties": {
+        "text": {"type": "string", "minLength": 1, "maxLength": 10000},
+        "tokenizer_id": {"enum": ["omb-unicode-grapheme-v1", "omb-grapheme-bpe-v1"]},
+        "normalization": {"const": "NFC"},
+        "show_merge_trace": {"type": "boolean"}
+      }
+    },
+    "token": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["index", "piece", "display_text", "token_id", "utf8_start", "utf8_end", "grapheme_start", "grapheme_end"],
+      "properties": {
+        "index": {"type": "integer", "minimum": 0, "maximum": 4095},
+        "piece": {"type": "string", "maxLength": 200},
+        "display_text": {"type": "string", "maxLength": 200},
+        "token_id": {"type": ["integer", "null"]},
+        "utf8_start": {"type": "integer", "minimum": 0},
+        "utf8_end": {"type": "integer", "minimum": 0},
+        "grapheme_start": {"type": "integer", "minimum": 0},
+        "grapheme_end": {"type": "integer", "minimum": 0}
+      }
+    },
+    "output": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["normalized_text", "normalization_changed", "tokenizer", "tokens", "merge_trace", "counts"],
+      "properties": {
+        "normalized_text": {"type": "string"},
+        "normalization_changed": {"type": "boolean"},
+        "tokenizer": {"type": "object"},
+        "tokens": {"type": "array", "maxItems": 4096, "items": {"$ref": "#/$defs/token"}},
+        "merge_trace": {"type": "array", "maxItems": 16384, "items": {"type": "object"}},
+        "counts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["utf8_bytes", "code_points", "graphemes", "tokens"],
+          "properties": {
+            "utf8_bytes": {"type": "integer", "minimum": 0},
+            "code_points": {"type": "integer", "minimum": 0},
+            "graphemes": {"type": "integer", "minimum": 0},
+            "tokens": {"type": "integer", "minimum": 0, "maximum": 4096}
+          }
+        }
+      }
+    }
+  }
+}

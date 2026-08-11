@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://omnibox.local/schemas/llm-lab/tool-calling.contract.schema.json",
+  "title": "Teaching tool-calling contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["lab_id", "input", "output"],
+  "properties": {
+    "lab_id": {"const": "lab.llm.tool_calling"},
+    "input": {
+      "type": "object", "additionalProperties": false,
+      "required": ["mode", "user_request", "candidate_tool_call", "max_steps", "error_fixture"],
+      "properties": {
+        "mode": {"enum": ["offline_fixture", "model_generated"]},
+        "user_request": {"type": "string", "minLength": 1, "maxLength": 2000},
+        "candidate_tool_call": {
+          "type": "object", "additionalProperties": false,
+          "required": ["call_id", "name", "arguments"],
+          "properties": {
+            "call_id": {"type": "string", "minLength": 1, "maxLength": 100},
+            "name": {"type": "string", "minLength": 1, "maxLength": 100},
+            "arguments": {"type": "object"}
+          }
+        },
+        "max_steps": {"type": "integer", "minimum": 1, "maximum": 4},
+        "error_fixture": {"type": ["string", "null"]}
+      }
+    },
+    "output": {
+      "type": "object", "additionalProperties": false,
+      "required": ["status", "pipeline", "observation"],
+      "properties": {
+        "status": {"enum": ["success", "error"]},
+        "pipeline": {"type": "array", "maxItems": 12, "items": {"type": "object"}},
+        "observation": {"type": "object"}
+      }
+    }
+  }
+}

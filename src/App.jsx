@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   ArrowLeft, ArrowRight, Check, Clipboard, Cpu, Eye, EyeOff, Home, KeyRound, LoaderCircle, LockKeyhole,
@@ -6,11 +6,16 @@ import {
   FilePlus2, Trash2, Play, Copy,
 } from 'lucide-react'
 import { api } from './api'
-import { advancedTools, aiTools, basicTools, cardTools, clipboardTools, fileTools, hybridTools, tools } from './tools'
-import AdvancedToolPage from './AdvancedTools'
-import ClipboardHistoryPage from './ClipboardHistory'
-import HybridToolPage from './HybridTools'
-import SocialCardPage from './SocialCard'
+import { advancedTools, aiTools, basicTools, cardTools, clipboardTools, fileTools, hybridTools, learningTools, presentationTools, systemTools, tools } from './tools'
+
+const AdvancedToolPage = lazy(() => import('./AdvancedTools'))
+const ClipboardHistoryPage = lazy(() => import('./ClipboardHistory'))
+const HybridToolPage = lazy(() => import('./HybridTools'))
+const SocialCardPage = lazy(() => import('./SocialCard'))
+const LLMLabPage = lazy(() => import('./LLMLab'))
+const FundLearningPage = lazy(() => import('./FundLearning'))
+const SystemToolPage = lazy(() => import('./SystemTools'))
+const PresentationStudio = lazy(() => import('./PresentationStudio'))
 
 const providerPresets = {
   openai: { label: 'OpenAI', base_url: 'https://api.openai.com/v1', model: 'gpt-4.1-mini' },
@@ -99,9 +104,18 @@ function App() {
         <AnimatePresence mode="wait">
           {page === 'home' ? (
             <HomePage key="home" configured={configured} selectTool={selectTool} openSettings={() => setSettingsOpen(true)} />
-          ) : (
-            activeTool?.type === 'clipboard' ? (
+          ) : <Suspense key={activeTool?.id || 'tool'} fallback={<div className="route-loading"><LoaderCircle className="spin" size={20} /><span>正在打开工具…</span></div>}>
+            {
+            activeTool?.type === 'fund_learning' ? (
+              <FundLearningPage key={activeTool.id} tool={activeTool} configured={configured} openSettings={() => setSettingsOpen(true)} goHome={goHome} />
+            ) : activeTool?.type === 'learning' ? (
+              <LLMLabPage key={activeTool.id} tool={activeTool} goHome={goHome} />
+            ) : activeTool?.type === 'clipboard' ? (
               <ClipboardHistoryPage key={activeTool.id} tool={activeTool} goHome={goHome} />
+            ) : activeTool?.type === 'system' ? (
+              <SystemToolPage key={activeTool.id} tool={activeTool} goHome={goHome} />
+            ) : activeTool?.type === 'presentation' ? (
+              <PresentationStudio key={activeTool.id} tool={activeTool} configured={configured} openSettings={() => setSettingsOpen(true)} goHome={goHome} />
             ) : activeTool?.type === 'file' ? (
               <FileToolPage key={activeTool.id} tool={activeTool} configured={configured} openSettings={() => setSettingsOpen(true)} goHome={goHome} />
             ) : activeTool?.type === 'advanced' ? (
@@ -113,7 +127,8 @@ function App() {
             ) : (
               <ToolPage key={activeTool?.id} tool={activeTool} configured={configured} openSettings={() => setSettingsOpen(true)} goHome={goHome} />
             )
-          )}
+            }
+          </Suspense>}
         </AnimatePresence>
       </main>
       <AnimatePresence>
@@ -143,15 +158,19 @@ function Sidebar({ page, open, goHome, openSearch, openSettings, selectTool }) {
         <button className={`nav-item ${page === 'home' ? 'active' : ''}`} onClick={goHome}>
           <Home size={17} /><span>首页</span>
         </button>
+        <div className="nav-label">学习中心</div>
+        {learningTools.map((tool) => <SidebarTool key={tool.id} tool={tool} onClick={() => selectTool(tool)} />)}
         <div className="nav-label">文件处理</div>
         {fileTools.map((tool) => <SidebarTool key={tool.id} tool={tool} onClick={() => selectTool(tool)} />)}
         <div className="nav-label">开发与数据</div>
         {advancedTools.filter((tool) => tool.category === 'data').map((tool) => <SidebarTool key={tool.id} tool={tool} onClick={() => selectTool(tool)} />)}
         <div className="nav-label">图像与系统</div>
         {clipboardTools.map((tool) => <SidebarTool key={tool.id} tool={tool} onClick={() => selectTool(tool)} />)}
+        {systemTools.map((tool) => <SidebarTool key={tool.id} tool={tool} onClick={() => selectTool(tool)} />)}
         {advancedTools.filter((tool) => tool.category === 'system').map((tool) => <SidebarTool key={tool.id} tool={tool} onClick={() => selectTool(tool)} />)}
         {basicTools.map((tool) => <SidebarTool key={tool.id} tool={tool} onClick={() => selectTool(tool)} />)}
         <div className="nav-label">写作与识别</div>
+        {presentationTools.map((tool) => <SidebarTool key={tool.id} tool={tool} onClick={() => selectTool(tool)} />)}
         {cardTools.map((tool) => <SidebarTool key={tool.id} tool={tool} onClick={() => selectTool(tool)} />)}
         {hybridTools.map((tool) => <SidebarTool key={tool.id} tool={tool} onClick={() => selectTool(tool)} />)}
         <div className="nav-label">内容工具</div>
@@ -199,6 +218,11 @@ function HomePage({ configured, selectTool, openSettings }) {
         <div className="hero-meta"><span>PDF / DOCX / XLSX</span><span>源文件保护</span><span>批量执行</span></div>
       </section>
 
+      <SectionHeader eyebrow="LEARN" title="学习实验室" description="用可复算实验理解机制，先预测、再运行、最后解释。" />
+      <div className="tool-grid file-grid">
+        {learningTools.map((tool, index) => <ToolCard key={tool.id} tool={tool} index={index} onClick={() => selectTool(tool)} />)}
+      </div>
+
       <SectionHeader eyebrow="FILES" title="文件批处理" description="选择多个文件，检查预览后一次执行。" />
       <div className="tool-grid file-grid">
         {fileTools.map((tool, index) => <ToolCard key={tool.id} tool={tool} index={index} onClick={() => selectTool(tool)} />)}
@@ -206,12 +230,12 @@ function HomePage({ configured, selectTool, openSettings }) {
 
       <SectionHeader eyebrow="UTILITIES" title="开发与日常工具" description="格式校验、编解码、文本、图片与网络诊断。" />
       <div className="tool-grid basic-grid">
-        {[...clipboardTools, ...advancedTools, ...basicTools].map((tool, index) => <ToolCard key={tool.id} tool={tool} index={index} onClick={() => selectTool(tool)} />)}
+        {[...clipboardTools, ...systemTools, ...advancedTools, ...basicTools].map((tool, index) => <ToolCard key={tool.id} tool={tool} index={index} onClick={() => selectTool(tool)} />)}
       </div>
 
       <SectionHeader eyebrow="CREATE" title="写作、翻译与识别" description="优先使用本地或专用服务，需要语义理解时再启用模型。" />
       <div className="tool-grid hybrid-grid-cards">
-        {[...cardTools, ...hybridTools].map((tool, index) => <ToolCard key={tool.id} tool={tool} index={index} onClick={() => selectTool(tool)} />)}
+        {[...presentationTools, ...cardTools, ...hybridTools].map((tool, index) => <ToolCard key={tool.id} tool={tool} index={index} onClick={() => selectTool(tool)} />)}
       </div>
 
       <SectionHeader eyebrow="WRITING" title="内容工具" description="仅这些工具会使用你连接的模型服务。" />

@@ -4,6 +4,7 @@ const { spawn } = require('child_process')
 const http = require('http')
 const net = require('net')
 const { createClipboardHistoryService } = require('./clipboard-history.cjs')
+const { registerPresentationHandlers } = require('./presentation-export.cjs')
 
 let apiProcess = null
 let apiPort = 8000
@@ -18,6 +19,7 @@ ipcMain.handle('files:select', async (_event, kind = 'documents') => {
     images: [{ name: '图片', extensions: ['png', 'jpg', 'jpeg', 'webp', 'svg'] }],
     identity_images: [{ name: '证件图片', extensions: ['png', 'jpg', 'jpeg', 'webp'] }],
     office: [{ name: 'Excel 或 Word', extensions: ['xlsx', 'xlsm', 'docx'] }],
+    presentation: [{ name: '演示内容与 Excel 数据', extensions: ['pptx', 'docx', 'xlsx', 'xlsm', 'md', 'markdown', 'txt'] }],
     excel: [{ name: 'Excel 工作簿', extensions: ['xlsx', 'xlsm'] }],
     word: [{ name: 'Word 文档', extensions: ['docx'] }],
     ocr: [{ name: 'OCR 图片', extensions: ['png', 'jpg', 'jpeg', 'webp', 'bmp', 'tif', 'tiff'] }],
@@ -35,6 +37,29 @@ ipcMain.handle('directory:select', async () => {
   const result = await dialog.showOpenDialog({ title: '选择输出文件夹', properties: ['openDirectory', 'createDirectory'] })
   return result.canceled ? '' : result.filePaths[0]
 })
+
+ipcMain.handle('document:open-markdown', async () => {
+  const result = await dialog.showOpenDialog({ title: '打开 Markdown', properties: ['openFile'], filters: [{ name: 'Markdown 或文本', extensions: ['md', 'markdown', 'txt'] }] })
+  if (result.canceled || !result.filePaths[0]) return { canceled: true }
+  const filePath = result.filePaths[0]
+  const fs = require('fs')
+  const item = await fs.promises.stat(filePath)
+  if (item.size > 2 * 1024 * 1024) return { canceled: false, error: 'Markdown 文件不能超过 2 MB' }
+  return { canceled: false, path: filePath, content: await fs.promises.readFile(filePath, 'utf8') }
+})
+
+ipcMain.handle('document:save-markdown', async (_event, payload = {}) => {
+  const suggestedName = String(payload.suggestedName || '新文档').replace(/[\\/:*?"<>|]/g, '_').slice(0, 80) || '新文档'
+  const content = String(payload.content || '').slice(0, 2 * 1024 * 1024)
+  const format = payload.format === 'html' ? 'html' : 'md'
+  const result = await dialog.showSaveDialog({ title: format === 'html' ? '导出 HTML 文档' : '另存 Markdown', defaultPath: `${suggestedName}.${format}`, filters: [{ name: format === 'html' ? 'HTML 网页' : 'Markdown', extensions: [format] }] })
+  if (result.canceled || !result.filePath) return { canceled: true }
+  const fs = require('fs')
+  await fs.promises.writeFile(result.filePath, content, 'utf8')
+  return { canceled: false, path: result.filePath }
+})
+
+registerPresentationHandlers({ ipcMain, BrowserWindow, dialog })
 
 ipcMain.handle('path:show', async (_event, targetPath) => {
   if (targetPath) shell.showItemInFolder(targetPath)

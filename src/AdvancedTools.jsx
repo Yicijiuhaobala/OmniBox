@@ -5,6 +5,7 @@ import {
   LoaderCircle, Play, ShieldAlert, ShieldCheck, Trash2, Wifi, XCircle,
 } from 'lucide-react'
 import { api } from './api'
+import VisionComponentCard from './VisionComponentCard'
 
 
 const fileName = (path) => path.split(/[\\/]/).pop()
@@ -65,6 +66,7 @@ function StructuredTool({ tool, goHome }) {
   const [result, setResult] = useState(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [visionReady, setVisionReady] = useState(false)
   const run = async () => {
     setLoading(true); setError(''); setResult(null)
     try { setResult(await api.structured({ format, action, input, schema_text: schema })) }
@@ -244,6 +246,7 @@ function ImageTool({ tool, goHome }) {
   }
   const run = async () => {
     if (!files.length) return setError('请先选择图片')
+    if (action === 'inpaint' && !visionReady) return setError('请先下载并启用本地视觉组件')
     setLoading(true); setError(''); setResult(null)
     try { setResult(await api.image({ action, files, output_dir: outputDir, target, width: Number(width), height: Number(height), x: Number(x), y: Number(y), quality: Number(quality), inpaint_radius: Number(inpaintRadius), page_size: pageSize, margin: Number(margin) })) }
     catch (err) { setError(err.message) }
@@ -262,7 +265,7 @@ function ImageTool({ tool, goHome }) {
         <Tabs items={[["convert", "格式转换"], ["compress", "无损压缩"], ["resize", "尺寸缩放"], ["crop", "区域裁剪"], ["inpaint", "选区修复"], ["images_to_pdf", "照片转 PDF"], ["remove_exif", "清除 EXIF"]]} value={action} onChange={switchAction} />
         {action === 'convert' && <><div className="inline-controls"><label className="control-label"><span>目标格式</span><select value={target} onChange={(event) => setTarget(event.target.value)}><option value="png">PNG</option><option value="jpg">JPG</option><option value="webp">WebP</option><option value="svg">SVG</option></select></label><label className="control-label grow"><span>JPG/WebP 质量：{quality}</span><input type="range" min="1" max="100" value={quality} onChange={(event) => setQuality(event.target.value)} /></label></div>{target === 'svg' && <div className="tool-notice"><ShieldAlert size={15} /><span>位图转 SVG 会以内嵌 PNG 方式封装，不会把像素自动矢量化。</span></div>}</>}
         {['resize', 'crop', 'inpaint'].includes(action) && <>{imageInfo[files[0]] && <div className="source-dimensions"><span>当前基准图片</span><strong>{imageInfo[files[0]].width} × {imageInfo[files[0]].height} px</strong><small>{files.length > 1 ? '批量处理会对每张图片使用相同参数' : fileName(files[0])}</small></div>}<div className="dimension-grid">{(action === 'crop' || action === 'inpaint') && <><label className="control-label"><span>起点 X</span><input type="number" min="0" value={x} onChange={(event) => setX(event.target.value)} /></label><label className="control-label"><span>起点 Y</span><input type="number" min="0" value={y} onChange={(event) => setY(event.target.value)} /></label></>}<label className="control-label"><span>{action === 'inpaint' ? '选区宽度' : '宽度'}{action === 'resize' && '（0=等比）'}</span><input type="number" min="0" value={width} onChange={(event) => setWidth(event.target.value)} /></label><label className="control-label"><span>{action === 'inpaint' ? '选区高度' : '高度'}{action === 'resize' && '（0=等比）'}</span><input type="number" min="0" value={height} onChange={(event) => setHeight(event.target.value)} /></label>{action === 'inpaint' && <label className="control-label"><span>修复半径</span><input type="number" min="1" max="30" value={inpaintRadius} onChange={(event) => setInpaintRadius(event.target.value)} /></label>}</div></>}
-        {action === 'inpaint' && <div className="tool-notice warning"><ShieldAlert size={15} /><span>仅用于处理本人拥有编辑权的图片。填写水印或瑕疵所在矩形坐标，本机会根据周边像素修复选区；复杂背景可能需要缩小选区并多次处理。</span></div>}
+        {action === 'inpaint' && <><VisionComponentCard onReadyChange={setVisionReady} /><div className="tool-notice warning"><ShieldAlert size={15} /><span>仅用于处理本人拥有编辑权的图片。填写水印或瑕疵所在矩形坐标，本机会根据周边像素修复选区；复杂背景可能需要缩小选区并多次处理。</span></div></>}
         {action === 'images_to_pdf' && <><div className="inline-controls"><label className="control-label"><span>页面尺寸</span><select value={pageSize} onChange={(event) => setPageSize(event.target.value)}><option value="a4">A4 自动横竖版</option><option value="original">跟随原图尺寸</option></select></label>{pageSize === 'a4' && <label className="control-label grow"><span>页边距：{margin} px</span><input type="range" min="0" max="200" value={margin} onChange={(event) => setMargin(event.target.value)} /></label>}</div><div className="tool-notice"><ShieldCheck size={15} /><span>按左侧顺序一张照片一页，保持原比例、不会裁切；输出 PDF 不携带原图 EXIF。</span></div></>}
         {action === 'compress' && <div className="tool-notice"><ShieldAlert size={15} /><span>PNG/WebP 使用无损重压缩；JPG 无损移除 EXIF 和注释，不重新编码图像数据。</span></div>}
         <div className="output-dir"><div><span>输出位置</span><strong>{outputDir || '自动创建“OmniBox 输出”文件夹'}</strong></div><button className="secondary-button compact" onClick={chooseOutput}>更改</button></div>

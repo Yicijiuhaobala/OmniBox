@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://omnibox.local/schemas/llm-lab/lab-run-envelope.schema.json",
+  "title": "OmniBox LLM Lab run envelope",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["status", "summary", "next_actions", "artifacts", "data", "metrics", "warnings", "audit"],
+  "properties": {
+    "status": {"enum": ["success", "warning", "error"]},
+    "summary": {"type": "string", "minLength": 1, "maxLength": 300},
+    "next_actions": {"type": "array", "maxItems": 8, "items": {"type": "string", "maxLength": 300}},
+    "artifacts": {"type": "array", "maxItems": 20, "items": {"type": "string", "maxLength": 500}},
+    "data": {"type": ["object", "null"]},
+    "metrics": {"type": "object"},
+    "warnings": {"type": "array", "maxItems": 20, "items": {"type": "string", "maxLength": 500}},
+    "error": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["code", "message", "retryable", "root_cause_hint", "retry_instruction", "stop_condition"],
+      "properties": {
+        "code": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]*$"},
+        "message": {"type": "string", "minLength": 1, "maxLength": 500},
+        "retryable": {"type": "boolean"},
+        "root_cause_hint": {"type": "string", "maxLength": 500},
+        "retry_instruction": {"type": "string", "maxLength": 500},
+        "stop_condition": {"type": "string", "maxLength": 500}
+      }
+    },
+    "audit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract_version", "lab_ref", "lab_version", "implementation", "policy_version"],
+      "properties": {
+        "contract_version": {"const": "llm-lab-p0-1"},
+        "lab_ref": {"type": "string", "pattern": "^lab\\.llm\\."},
+        "lab_version": {"const": "1.0.0"},
+        "implementation": {"type": "string", "minLength": 1, "maxLength": 100},
+        "policy_version": {"const": "llm-lab-policy-1"}
+      }
+    }
+  }
+}

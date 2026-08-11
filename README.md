@@ -19,6 +19,8 @@ OmniBox 是一个本地优先、面向 Windows 与 macOS 的桌面效率工具�
 - PDF、Word（DOCX）、Excel（XLSX）批量摘要：本机提取文字，逐份生成 Markdown 摘要
 - 格式转换：PDF/Word/Excel 转 TXT、Excel 转 CSV、CSV 转 Excel、TXT 转 Word
 - Word/Excel 转 PDF：检测并调用本机 LibreOffice，未安装时给出明确提示
+- PPT / 网页演示：从 Markdown、Word、Excel 或 PPTX 提取结构；提供 5 类汇报模板、9 套真实视觉预览、Excel 图表生成与内容质量检查，可导出单文件 HTML、演示 PDF 或可继续编辑的 PPTX
+- 在线演示模板：应用只加载远程模板目录，用户选择后才下载模板 JSON；已下载模板可离线使用、更新或删除缓存，模板内容不会预置进安装包
 - 批量重命名：支持 `{name}`、`{n}`、`{n:03}`、`{ext}` 模板和执行前预览
 - 转换始终输出到新目录；重命名默认创建副本，也可选择原地修改
 
@@ -38,15 +40,34 @@ OmniBox 是一个本地优先、面向 Windows 与 macOS 的桌面效率工具�
 - 屏幕吸色与 HEX、RGB、HSL 颜色格式转换
 - UUID、安全随机密码批量生成
 - 超级剪贴板历史：应用运行时自动记录最近 50 次文本、浏览器图片、Finder/资源管理器图片文件与网页内嵌图片，支持搜索、重新复制、单条删除与一键清空；联网图片地址只作为文本保存，不自动下载
+- 局域网网页快传：临时生成二维码，手机浏览器可直接上传原文件到指定目录，或下载电脑端明确选择的文件；不经过互联网、不压缩画质
 - 文本长图：纯本地将 Markdown 或纯文本渲染为社交分享卡片，支持背景主题、自定义颜色、系统字体、金句样式、阴影、画布宽度与 PNG 导出
+
+### 基金知识学习（P0）
+
+- 首期按“基金是什么—常见类型—怎么赚亏—购买前检查—是否适合自己”组织 5 节零基础课程，本地仅包含目录骨架、检索关键词和权威来源清单
+- 默认联网读取中国证监会、中国证券投资基金业协会网页，把专业内容整理成“入门问题—一句话理解—实际用途—现在怎么做”；监管原文默认折叠，可随时展开核对
+- 配置模型后，可基于本次取得的权威原文临时生成更生活化的讲解、情景示例、常见误区和 2 道测验；课程正文与模型响应只保留在约 30 分钟的进程内存缓存中
+- AI 测验由本地规则评分器完成，提交具备幂等保护；仅答案编号、得分、来源 ID、有效学习证据和概念掌握度保存在 `learning-user.db`
+- 课程持续展示教育用途与风险边界，不接入真实账户、不推荐具体基金、不提供自动交易或收益承诺
+
+### 大模型学习实验室（P0）
+
+- 通用实验闭环：先写预测，再运行并检查中间步骤，最后用证据解释结论
+- Tokenizer 可视化：Unicode Grapheme 与内置教学 BPE；教学结果不等同于商业模型 Tokenizer 或账单
+- 小型 Attention：单 Head、`float64` 的 `QKᵀ → 缩放 → Mask → Softmax → 输出` 逐步计算
+- RAG Debugger：纯本地 `omb-bm25-v1` 检索，显示排名和逐项 term contribution
+- 运行记录与学习证据：可保存预测、参数、结构化结果和结论，并在页面查看最近记录；证据先以候选状态写入本机 `learning-user.db`
+- Prompt Compare、Tool Calling、Eval Runner 已提供 JSON Schema Draft 2020-12 契约与黄金夹具，执行器将在后续 Spike 接入
+- 所有 P0 实验契约默认拒绝未声明字段，并为错误提供原因、安全重试方式和停止条件
 
 ### 普通 / AI 双模式
 
 - 文本翻译（有道智云、百度翻译开放平台 / AI 语义增强），支持自动语言检测、错选提示和英文美式/英式本地朗读
 - 代码格式化与命名转换（可选 AI 语义命名）
 - OCR 文字识别（本地 ONNX / AI 表格与 JSON 提取）
-- Markdown 写作、实时预览与 PDF 导出（可选 AI 续写、目录、摘要）
-- Excel / Word 助手：白话生成公式、本地清理空行/重复行/空段落/人工分页，或由 AI 生成白名单计划后在本机另存副本
+- Markdown 写作：打开和另存 `.md`，实时预览，导出 HTML、PDF、Word 和可编辑 PPTX（可选 AI 续写、目录、摘要）
+- Excel / Word 助手：执行前先预览影响范围；支持 Excel 清理、工作表拆分/合并、工作簿差异对比，以及 Word 清理、批量替换、表格/图片提取；常用批处理可保存为纯本地复用方案，AI 处理仍只执行白名单计划并另存副本
 - Prompt 调试与优化：扩展为 System Prompt、Context、Few-Shot、用户模板与检查清单
 - 证件防盗用水印：纯本地为身份证、营业执照等图片铺满半透明自定义水印，并清除原图元数据
 - 全局白天 / 黑夜主题：跟随系统首次选择，并记住用户切换结果
@@ -65,6 +86,7 @@ OmniBox 是一个本地优先、面向 Windows 与 macOS 的桌面效率工具�
 
 - 桌面外壳：Electron
 - 前端：React + Vite + Framer Motion + Lucide
+- 演示导出：PptxGenJS + Electron 打印沙箱；视觉工作流参考 Frontend Slides（MIT）
 - 本地后端：Python + FastAPI
 - Python 打包：PyInstaller
 - 桌面安装包：electron-builder
@@ -131,9 +153,12 @@ npm run build:win
 
 产物位于 `release/`。这是因为 PyInstaller 生成的平台原生 Python 可执行文件不能跨系统直接构建。正式发布时，建议使用 GitHub Actions 的 macOS 与 Windows runner 分别构建并签名。
 
+在线演示模板目录默认读取 `https://raw.githubusercontent.com/Yicijiuhaobala/OmniBox/develop/templates/catalog.json`。仓库中的 `templates/` 是待托管资源，不会进入 Electron 安装包；只有用户选择的模板会下载到当前用户的 OmniBox 数据目录。开发或私有部署时可以通过 `OMNIBOX_TEMPLATE_CATALOG_URL` 指向同结构的 HTTPS 目录（本机调试允许 loopback HTTP）。
+
 只验证前端或 Python 源码时可运行：
 
 ```bash
+npm run test:learning
 npm run build:web
 python -m compileall -q backend
 ```
@@ -142,11 +167,14 @@ python -m compileall -q backend
 
 ```text
 OmniBox/
-├── backend/            # FastAPI 本地服务、文件与图像处理
+├── backend/            # FastAPI 本地服务、文件、图像与学习数据持久化
 ├── build/              # electron-builder 所需最终图标
 ├── electron/           # Electron 主进程与 preload
 ├── public/             # 前端静态资源
-├── src/                # React 界面与工具实现
+├── src/                # React 界面、基金课程骨架、工具实现与大模型实验契约
+├── templates/          # 在线演示模板目录与独立模板包，不进入安装包
+├── tests/              # 本地确定性实验的黄金测试
+├── docs/               # 产品需求、交互、数据与安全设计
 ├── package.json        # 开发、构建和打包脚本
 └── vite.config.mjs     # Vite 配置
 ```
@@ -160,7 +188,9 @@ OmniBox/
 3. 普通工具中，IP 归属地会向 `ipwho.is` 发送待查询 IP；普通翻译会把原文发送到用户选择的有道或百度翻译服务。英文发音使用操作系统本地语音；图片缩放/选区修复/照片转 PDF、本地 OCR、Office 本地清理、证件水印、文本长图、超级剪贴板历史、Ping 和端口扫描不使用模型服务。
 4. 超级剪贴板历史只在 OmniBox 运行时监听，最多保留 50 条、单张图片不超过 12 MB、全部历史不超过 100 MB；数据持久化在当前用户的 OmniBox 数据目录，类 Unix 系统文件权限设为 `600`。
 5. API Key、有道与百度翻译凭据以明文保存在当前用户的本地配置文件中；设置页默认以密码形式显示，类 Unix 系统文件权限设为 `600`。
-6. 本地 API 只监听 `127.0.0.1`，不对局域网开放。
+6. 基金课程正文和 AI 讲解不写入磁盘，仅在进程内存中短期缓存；测验只保存答案编号、得分、来源 ID、学习证据和概念掌握度。课程也不保存真实基金账户、身份证明或银行卡数据。
+7. 大模型实验运行与候选学习证据保存在 `learning-user.db`，不写入 API Key、密码或服务 Token；类 Unix 系统数据库文件权限设为 `600`。
+8. 本地 API 只监听 `127.0.0.1`，开发模式 CORS 仅允许 `localhost` 或 `127.0.0.1` 的 loopback 来源，不对局域网开放。只有用户主动开启“局域网网页快传”时，应用才会额外启动带随机令牌和自动到期时间的独立临时文件服务；停止分享、到期或退出应用后立即关闭。
 
 ## 分支与发布策略
 

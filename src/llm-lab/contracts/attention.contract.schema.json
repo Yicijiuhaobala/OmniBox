@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://omnibox.local/schemas/llm-lab/attention.contract.schema.json",
+  "title": "Scaled dot-product attention contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["lab_id", "input", "output"],
+  "properties": {
+    "lab_id": {"const": "lab.llm.attention_toy"},
+    "input": {"$ref": "#/$defs/input"},
+    "output": {"$ref": "#/$defs/output"}
+  },
+  "$defs": {
+    "numberMatrix": {
+      "type": "array", "minItems": 1, "maxItems": 8,
+      "items": {"type": "array", "minItems": 1, "maxItems": 8, "items": {"type": "number", "minimum": -10000, "maximum": 10000}}
+    },
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["q", "k", "v", "mask_type", "custom_mask", "precision"],
+      "properties": {
+        "q": {"$ref": "#/$defs/numberMatrix"},
+        "k": {"$ref": "#/$defs/numberMatrix"},
+        "v": {"$ref": "#/$defs/numberMatrix"},
+        "mask_type": {"enum": ["none", "causal", "custom"]},
+        "custom_mask": {"type": ["array", "null"]},
+        "precision": {"const": "float64"}
+      }
+    },
+    "output": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["shapes", "scale", "raw_scores", "scaled_scores", "masked_scores", "weights", "output", "invariants"],
+      "properties": {
+        "shapes": {"type": "object"},
+        "scale": {"type": "number"},
+        "raw_scores": {"$ref": "#/$defs/numberMatrix"},
+        "scaled_scores": {"$ref": "#/$defs/numberMatrix"},
+        "masked_scores": {"type": "array"},
+        "weights": {"$ref": "#/$defs/numberMatrix"},
+        "output": {"$ref": "#/$defs/numberMatrix"},
+        "invariants": {"type": "object"}
+      }
+    }
+  }
+}

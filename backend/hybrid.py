@@ -5,8 +5,6 @@ import hashlib
 import re
 import time
 import uuid
-from pathlib import Path
-from threading import Lock
 from typing import Literal, Optional
 
 import httpx
@@ -15,8 +13,10 @@ from pydantic import BaseModel, Field
 
 try:
     from .config_store import get_secret
+    from .vision_component import VisionComponentError, http_error as vision_http_error, manager as vision_manager
 except ImportError:
     from config_store import get_secret
+    from vision_component import VisionComponentError, http_error as vision_http_error, manager as vision_manager
 
 
 router = APIRouter(prefix="/api/hybrid", tags=["hybrid"])
@@ -242,50 +242,30 @@ def code(payload: CodeRequest) -> dict:
         raise HTTPException(400, f"无法格式化：{exc}") from exc
 
 
-_ocr_engine = None
-_ocr_lock = Lock()
+@router.get("/ocr-component")
+def ocr_component_status(refresh: bool = False) -> dict:
+    return vision_manager.status(refresh)
 
 
-def get_ocr_engine():
-    global _ocr_engine
-    with _ocr_lock:
-        if _ocr_engine is None:
-            try:
-                from rapidocr_onnxruntime import RapidOCR
+@router.post("/ocr-component/install")
+def install_ocr_component() -> dict:
+    try:
+        return vision_manager.install()
+    except VisionComponentError as exc:
+        raise vision_http_error(exc) from exc
 
-                _ocr_engine = RapidOCR()
-            except Exception as exc:
-                raise HTTPException(503, f"本地 OCR 引擎加载失败：{exc}") from exc
-    return _ocr_engine
+
+@router.delete("/ocr-component")
+def uninstall_ocr_component() -> dict:
+    try:
+        return vision_manager.uninstall()
+    except VisionComponentError as exc:
+        raise vision_http_error(exc) from exc
 
 
 @router.post("/ocr")
 def ocr(payload: OCRRequest) -> dict:
-    engine = get_ocr_engine()
-    items = []
-    failures = []
-    for raw_path in payload.files:
-        path = Path(raw_path).expanduser().resolve()
-        if not path.is_file():
-            failures.append({"source": str(path), "error": "文件不存在"})
-            continue
-        if path.suffix.lower() not in {".png", ".jpg", ".jpeg", ".webp", ".bmp", ".tif", ".tiff"}:
-            failures.append({"source": str(path), "error": "本地 OCR 暂不支持该格式"})
-            continue
-        try:
-            result, elapsed = engine(str(path))
-            lines = []
-            blocks = []
-            for block in result or []:
-                box, text, score = block
-                lines.append(text)
-                blocks.append({"text": text, "confidence": round(float(score), 4), "box": box})
-            elapsed_values = elapsed if isinstance(elapsed, (list, tuple)) else [elapsed]
-            total_elapsed = sum(float(value) for value in elapsed_values if isinstance(value, (int, float)))
-            items.append({
-                "source": str(path), "text": "\n".join(lines), "blocks": blocks,
-                "elapsed": round(total_elapsed, 3),
-            })
-        except Exception as exc:
-            failures.append({"source": str(path), "error": str(exc)})
-    return {"items": items, "failures": failures, "engine": "RapidOCR / ONNX Runtime"}
+    try:
+        return vision_manager.run({"action": "ocr", "files": payload.files})
+    except VisionComponentError as exc:
+        raise vision_http_error(exc) from exc

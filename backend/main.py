@@ -15,7 +15,7 @@ import uuid
 from csv import writer as csv_writer
 from datetime import datetime
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Optional
 
 import httpx
 import uvicorn
@@ -26,13 +26,27 @@ from pydantic import BaseModel, Field
 try:
     from .advanced import router as advanced_router
     from .config_store import get_secret, read_config, write_config
+    from .fund_learning import router as fund_learning_router
     from .hybrid import router as hybrid_router
-    from .office import clean_office, execute_office_plan, office_context, parse_plan, resolve_office_file
+    from .learning import router as learning_router
+    from .lan_transfer import router as lan_transfer_router
+    from .presentation import router as presentation_router
+    from .presentation_templates import router as presentation_templates_router
+    from .office_plans import router as office_plans_router
+    from .office import execute_office_local_action, execute_office_plan, office_context, parse_plan, preview_office_action, resolve_office_file
+    from .system_tools import router as system_tools_router
 except ImportError:
     from advanced import router as advanced_router
     from config_store import get_secret, read_config, write_config
+    from fund_learning import router as fund_learning_router
     from hybrid import router as hybrid_router
-    from office import clean_office, execute_office_plan, office_context, parse_plan, resolve_office_file
+    from learning import router as learning_router
+    from lan_transfer import router as lan_transfer_router
+    from presentation import router as presentation_router
+    from presentation_templates import router as presentation_templates_router
+    from office_plans import router as office_plans_router
+    from office import execute_office_local_action, execute_office_plan, office_context, parse_plan, preview_office_action, resolve_office_file
+    from system_tools import router as system_tools_router
 
 
 APP_VERSION = "0.1.0"
@@ -42,12 +56,20 @@ app = FastAPI(title="OmniBox Local API", version=APP_VERSION)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "null"],
+    allow_origin_regex=r"^https?://(?:localhost|127\.0\.0\.1):\d+$",
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 app.include_router(advanced_router)
 app.include_router(hybrid_router)
+app.include_router(learning_router)
+app.include_router(fund_learning_router)
+app.include_router(system_tools_router)
+app.include_router(lan_transfer_router)
+app.include_router(presentation_router)
+app.include_router(presentation_templates_router)
+app.include_router(office_plans_router)
 
 
 PROVIDERS = {
@@ -151,11 +173,13 @@ class OfficeFormulaRequest(BaseModel):
 
 
 class OfficeProcessRequest(BaseModel):
-    action: Literal["excel_clean", "word_clean", "ai_process"]
+    action: Literal["excel_clean", "excel_split", "excel_merge_sheets", "excel_compare", "word_clean", "word_replace", "word_extract", "ai_process"]
     file: str = Field(min_length=1, max_length=4_000)
     instruction: str = Field(default="", max_length=4_000)
     output_dir: str = ""
     options: dict = Field(default_factory=dict)
+    preview_only: bool = False
+    plan: Optional[dict] = None
 
 
 def load_settings() -> dict:
@@ -475,14 +499,23 @@ async def office_formula(payload: OfficeFormulaRequest) -> dict:
 async def office_process(payload: OfficeProcessRequest) -> dict:
     try:
         source = resolve_office_file(payload.file)
-        if payload.action in {"excel_clean", "word_clean"}:
-            return clean_office(source, payload.output_dir, payload.action, payload.options)
+        if payload.action != "ai_process":
+            if payload.preview_only:
+                return preview_office_action(source, payload.action, payload.options)
+            return execute_office_local_action(source, payload.output_dir, payload.action, payload.options)
         if not payload.instruction.strip():
             raise ValueError("请描述希望如何处理文件")
-        context = office_context(source)
-        planning_input = json.dumps({"用户要求": payload.instruction, "文件结构与样例": context}, ensure_ascii=False)
-        raw_plan = await request_ai("office_plan", planning_input)
-        plan = parse_plan(raw_plan)
+        if payload.plan:
+            if not isinstance(payload.plan.get("operations"), list) or not payload.plan["operations"] or len(payload.plan["operations"]) > 20:
+                raise ValueError("确认执行的操作计划无效")
+            plan = payload.plan
+        else:
+            context = office_context(source)
+            planning_input = json.dumps({"用户要求": payload.instruction, "文件结构与样例": context}, ensure_ascii=False)
+            raw_plan = await request_ai("office_plan", planning_input)
+            plan = parse_plan(raw_plan)
+        if payload.preview_only:
+            return {"result": plan.get("summary") or "AI 操作计划", "operations": plan["operations"], "plan": plan, "preview": True, "source_preserved": True}
         return {**execute_office_plan(source, payload.output_dir, plan), "plan": plan}
     except HTTPException:
         raise

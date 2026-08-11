@@ -27,6 +27,11 @@ import httpx
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
+try:
+    from .vision_component import VisionComponentError, http_error as vision_http_error, manager as vision_manager
+except ImportError:
+    from vision_component import VisionComponentError, http_error as vision_http_error, manager as vision_manager
+
 
 router = APIRouter(prefix="/api/advanced", tags=["advanced-tools"])
 
@@ -488,28 +493,6 @@ def _images_to_pdf(files: list[Path], payload: ImageRequest, output_dir: Path) -
             buffer.close()
 
 
-def _inpaint_region(image, payload: ImageRequest):
-    if not payload.width or not payload.height:
-        raise ValueError("选区宽度和高度必须大于 0")
-    right, bottom = payload.x + payload.width, payload.y + payload.height
-    if right > image.width or bottom > image.height:
-        raise ValueError(f"修复选区超出图片尺寸 {image.width}×{image.height}")
-
-    import cv2
-    import numpy as np
-    from PIL import Image
-
-    rgb = image.convert("RGB")
-    source = cv2.cvtColor(np.asarray(rgb), cv2.COLOR_RGB2BGR)
-    mask = np.zeros((image.height, image.width), dtype=np.uint8)
-    mask[payload.y:bottom, payload.x:right] = 255
-    repaired = cv2.inpaint(source, mask, payload.inpaint_radius, cv2.INPAINT_TELEA)
-    result = Image.fromarray(cv2.cvtColor(repaired, cv2.COLOR_BGR2RGB))
-    if image.mode in {"RGBA", "LA"}:
-        result.putalpha(image.convert("RGBA").getchannel("A"))
-    return result
-
-
 def _process_image(source: Path, payload: ImageRequest, output_dir: Path) -> tuple[Path, str]:
     suffix = source.suffix.lower()
     if payload.action == "convert":
@@ -534,6 +517,21 @@ def _process_image(source: Path, payload: ImageRequest, output_dir: Path) -> tup
     if payload.action == "compress" and suffix in {".jpg", ".jpeg"}:
         _strip_jpeg_exif(source, output)
         return output, "无损移除 EXIF/注释，保留 JPEG 图像数据"
+    if payload.action == "inpaint":
+        if suffix == ".svg":
+            raise ValueError("SVG 暂不支持选区修复，请先转换为 PNG")
+        vision_manager.run({
+            "action": "inpaint",
+            "source": str(source),
+            "output": str(output),
+            "x": payload.x,
+            "y": payload.y,
+            "width": payload.width,
+            "height": payload.height,
+            "radius": payload.inpaint_radius,
+            "quality": payload.quality,
+        })
+        return output, f"已修复选区 X={payload.x}、Y={payload.y}、{payload.width}×{payload.height}"
 
     image = _open_image(source)
     target = output_suffix.lstrip(".")
@@ -563,12 +561,6 @@ def _process_image(source: Path, payload: ImageRequest, output_dir: Path) -> tup
             return output, "已无损移除 EXIF"
         _save_raster(image, output, target, payload.quality, lossless=target == "webp")
         return output, "已移除元数据"
-    if payload.action == "inpaint":
-        if suffix == ".svg":
-            raise ValueError("SVG 暂不支持选区修复，请先转换为 PNG")
-        image = _inpaint_region(image, payload)
-        _save_raster(image, output, target, payload.quality, lossless=target == "webp")
-        return output, f"已修复选区 X={payload.x}、Y={payload.y}、{payload.width}×{payload.height}"
     _save_raster(image, output, target, payload.quality, lossless=True)
     return output, "PNG/WebP 无损重新压缩"
 
@@ -618,6 +610,8 @@ def image_tool(payload: ImageRequest) -> dict:
                     "source": str(source), "output": str(output), "before": before,
                     "after": after, "saved": before - after, "note": note,
                 })
+            except VisionComponentError:
+                raise
             except Exception as exc:
                 failures.append({"source": str(source), "error": str(exc)})
         if not items:
@@ -626,6 +620,8 @@ def image_tool(payload: ImageRequest) -> dict:
             "result": f"已处理 {len(items)} 张图片" + (f"，{len(failures)} 张失败" if failures else ""),
             "items": items, "failures": failures, "output_dir": str(output_dir),
         }
+    except VisionComponentError as exc:
+        raise vision_http_error(exc) from exc
     except Exception as exc:
         raise HTTPException(400, f"图片处理失败：{exc}") from exc
 

@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 
 
-CONFIG_DIR = Path(os.getenv("APPDATA") or Path.home() / ".omnibox")
+CONFIG_DIR = Path(os.getenv("OMNIBOX_DATA_DIR") or os.getenv("APPDATA") or Path.home() / ".omnibox")
 CONFIG_PATH = CONFIG_DIR / "settings.json"
 
 

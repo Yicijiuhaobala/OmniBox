@@ -1,0 +1,80 @@
+name: Release vision runtime
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Vision runtime version
+        required: true
+        default: 1.0.0
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build ${{ matrix.target }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-15
+            target: darwin-arm64
+          - os: windows-2025
+            target: win32-x64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install component build dependencies
+        run: python -m pip install pyinstaller==6.15.0 rapidocr-onnxruntime==1.4.4
+      - name: Build component
+        run: python -m PyInstaller --noconfirm --distpath component-dist --workpath work/pyinstaller-vision backend/omnibox-vision-runtime.spec
+      - name: Prepare release metadata
+        run: node scripts/prepare-vision-component.mjs
+        env:
+          OMNIBOX_VISION_VERSION: ${{ inputs.version }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vision-${{ matrix.target }}
+          path: component-dist/vision/*
+          if-no-files-found: error
+          retention-days: 7
+
+  release:
+    name: Publish vision-runtime-v${{ inputs.version }}
+    needs: build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: vision-*
+          path: artifacts
+      - name: Merge catalogs and collect assets
+        shell: bash
+        run: |
+          node scripts/merge-vision-catalogs.mjs artifacts release-assets/catalog.json
+          find artifacts -type f -name 'omnibox-vision-runtime-*' -exec cp '{}' release-assets/ \;
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: vision-runtime-v${{ inputs.version }}
+          target_commitish: ${{ github.sha }}
+          name: OmniBox Vision Runtime v${{ inputs.version }}
+          body: |
+            Optional local-only runtime for OmniBox OCR and image inpainting.
+
+            OmniBox verifies the platform, file size, SHA-256 and runtime protocol before installation.
+          files: release-assets/*
+          fail_on_unmatched_files: true

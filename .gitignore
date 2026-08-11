@@ -6,6 +6,7 @@ venv/
 # Frontend, backend and installer outputs
 dist/
 backend-dist/
+component-dist/
 release/
 output/
 work/

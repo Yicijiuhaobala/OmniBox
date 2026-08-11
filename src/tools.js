@@ -1,10 +1,21 @@
 import {
   Braces, Binary, KeyRound, Clock3, Regex, Image, Network,
   Sparkles, ScanText, Languages, ListCollapse, Code2, PenLine,
-  FileSearch, Files, FileOutput, CaseSensitive, ScanLine, NotebookPen, ShieldCheck, ClipboardList, GalleryVerticalEnd,
+  FileSearch, Files, FileOutput, CaseSensitive, ScanLine, NotebookPen, ShieldCheck, ClipboardList, GalleryVerticalEnd, BrainCircuit, PiggyBank,
+  ServerOff, HardDrive, RadioTower, Presentation,
 } from 'lucide-react'
 
 export const tools = [
+  {
+    id: 'fund_learning', type: 'fund_learning', title: '基金零基础入门', subtitle: '从“基金是什么”开始学',
+    description: '用实际问题和操作清单学习中国公募基金基础，不背法规，不堆专业术语。', icon: PiggyBank,
+    color: 'orange', category: 'learning',
+  },
+  {
+    id: 'llm_lab', type: 'learning', title: '大模型实验室', subtitle: '从可复算实验理解核心机制',
+    description: '通过 Tokenizer、Attention、RAG、Prompt、Tool Calling 与 Eval 实验建立大模型应用基础。', icon: BrainCircuit,
+    color: 'blue', category: 'learning',
+  },
   {
     id: 'file_summary', type: 'file', title: '文档摘要', subtitle: '批量提炼 PDF、Word、Excel',
     description: '在本机读取文档文字，再用你配置的模型逐份生成摘要。', icon: FileSearch,
@@ -26,6 +37,26 @@ export const tools = [
     color: 'cyan', category: 'system',
   },
   {
+    id: 'port_killer', type: 'system', title: '端口占用一键杀死', subtitle: '查询并终止本机监听进程',
+    description: '输入端口查看占用进程，确认后安全终止；自动保护 OmniBox 自身服务。', icon: ServerOff,
+    color: 'orange', category: 'system',
+  },
+  {
+    id: 'storage_cleaner', type: 'system', title: '设备存储清理', subtitle: '扫描缓存、日志与个人目录大文件',
+    description: '扫描缓存、日志和桌面、文档、下载目录大文件，再按所选类别安全处理。', icon: HardDrive,
+    color: 'green', category: 'system',
+  },
+  {
+    id: 'lan_transfer', type: 'system', title: '局域网网页快传', subtitle: '手机扫码上传或下载原文件',
+    description: '启动隔离的临时局域网服务，手机扫码后直接传输文件，不经过互联网。', icon: RadioTower,
+    color: 'cyan', category: 'system',
+  },
+  {
+    id: 'presentation_studio', type: 'presentation', title: 'PPT / 网页演示', subtitle: '在线模板、9 套主题与 Excel 图表',
+    description: '按需下载汇报模板，从 Markdown、Word、Excel 或 PPTX 生成演示并导出 HTML、PDF 或可编辑 PPTX。', icon: Presentation,
+    color: 'orange', category: 'content',
+  },
+  {
     id: 'translate', type: 'hybrid', title: '文本翻译', subtitle: '有道 / 百度翻译与语义增强',
     description: '可选择有道或百度开放平台进行普通翻译，也可启用模型进行语境化、风格化翻译。', icon: Languages,
     color: 'cyan', category: 'content',
@@ -41,8 +72,8 @@ export const tools = [
     color: 'orange', category: 'content', fileKind: 'images',
   },
   {
-    id: 'markdown', type: 'hybrid', title: 'Markdown 写作', subtitle: '编辑、预览、PDF 与写作辅助',
-    description: '本地实时预览和导出 PDF，也可启用模型续写、生成目录或摘要。', icon: NotebookPen,
+    id: 'markdown', type: 'hybrid', title: 'Markdown 写作', subtitle: '打开、编辑并导出多种办公格式',
+    description: '打开和另存 Markdown，本地实时预览并导出 HTML、PDF、Word 或可编辑 PPTX。', icon: NotebookPen,
     color: 'blue', category: 'content',
   },
   {
@@ -51,8 +82,8 @@ export const tools = [
     color: 'pink', category: 'content',
   },
   {
-    id: 'office_assistant', type: 'hybrid', title: 'Excel / Word 助手', subtitle: '公式生成、表格与文档清理',
-    description: '用白话生成 Excel 公式，或另存副本清理表格、空行、空段落和人工分页。', icon: Files,
+    id: 'office_assistant', type: 'hybrid', title: 'Excel / Word 助手', subtitle: '批处理、预览与可复用方案',
+    description: '预览后再清理、拆分、合并或对比文件，并将常用批处理配置保存为本地方案。', icon: Files,
     color: 'green', category: 'content', fileKind: 'office',
   },
   {
@@ -141,3 +172,6 @@ export const clipboardTools = tools.filter((tool) => tool.type === 'clipboard')
 export const advancedTools = tools.filter((tool) => tool.type === 'advanced')
 export const hybridTools = tools.filter((tool) => tool.type === 'hybrid')
 export const cardTools = tools.filter((tool) => tool.type === 'card')
+export const learningTools = tools.filter((tool) => ['learning', 'fund_learning'].includes(tool.type))
+export const systemTools = tools.filter((tool) => tool.type === 'system')
+export const presentationTools = tools.filter((tool) => tool.type === 'presentation')

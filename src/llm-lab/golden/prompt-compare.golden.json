@@ -1,0 +1,22 @@
+{
+  "test_id": "T-PRM-001",
+  "lab_id": "lab.llm.prompt_compare",
+  "input": {
+    "mode": "static_fixture",
+    "variants": [
+      {"id": "v1", "label": "文本版", "fixture_output": "Name: demo, Risk: low"},
+      {"id": "v2", "label": "结构化版", "fixture_output": "{\"name\":\"demo\",\"risk\":\"low\"}"}
+    ],
+    "cases": [{"id": "c1", "input": "提取名称和风险"}],
+    "repetitions": 1,
+    "checks": [{"type": "json_schema", "schema_ref": "fixture.person-risk.v1"}],
+    "blind_manual_review": true
+  },
+  "expected": {
+    "items": [
+      {"variant_id": "v1", "case_id": "c1", "status": "failed", "error_code": "JSON_PARSE_ERROR"},
+      {"variant_id": "v2", "case_id": "c1", "status": "passed"}
+    ],
+    "partial_failure_count": 0
+  }
+}

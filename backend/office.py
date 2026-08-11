@@ -2,6 +2,9 @@ from __future__ import annotations
 
 import json
 import re
+import shutil
+import zipfile
+from copy import copy
 from datetime import datetime
 from pathlib import Path
 
@@ -315,6 +318,227 @@ def clean_office(source: Path, output_dir: str, kind: str, options: dict) -> dic
     if options.get("remove_empty_table_rows", False):
         operations.append({"type": "remove_empty_table_rows"})
     return execute_office_plan(source, output_dir, {"summary": "Word 本地清理", "operations": operations})
+
+
+def preview_office_action(source: Path, kind: str, options: dict) -> dict:
+    suffix = source.suffix.lower()
+    operations: list[str] = []
+    warnings: list[str] = []
+    if kind.startswith("excel_"):
+        if suffix not in EXCEL_SUFFIXES:
+            raise ValueError("该操作仅支持 XLSX/XLSM 工作簿")
+        from openpyxl import load_workbook
+
+        workbook = load_workbook(source, read_only=True, data_only=False, keep_vba=suffix == ".xlsm")
+        try:
+            if kind == "excel_clean":
+                operations.append(f"扫描并清理 {len(workbook.sheetnames)} 个工作表中的文本空格和空白行")
+                if options.get("deduplicate_rows"):
+                    operations.append("按整行内容去重，保留每组首次出现的数据")
+            elif kind == "excel_split":
+                operations.append(f"拆分为 {len(workbook.sheetnames)} 个独立 XLSX 文件")
+                operations.extend(f"生成：{sheet.title}.xlsx（{sheet.max_row or 0} 行）" for sheet in workbook.worksheets[:20])
+            elif kind == "excel_merge_sheets":
+                total_rows = sum(max(0, (sheet.max_row or 0) - 1) for sheet in workbook.worksheets)
+                operations.append(f"把 {len(workbook.sheetnames)} 个工作表纵向合并为“合并结果”，预计 {total_rows} 行数据")
+                operations.append("新增“来源工作表”列，并以第一个工作表的首行作为表头")
+                warnings.append("不同工作表列结构不一致时，会按列位置合并并保留空值")
+            elif kind == "excel_compare":
+                other = resolve_office_file(str(options.get("other_file", "")))
+                if other.suffix.lower() not in EXCEL_SUFFIXES:
+                    raise ValueError("对比文件必须是 XLSX/XLSM")
+                operations.append(f"逐单元格比较 {source.name} 与 {other.name}")
+                operations.append("生成差异工作簿，列出工作表、单元格、原值和对比值")
+            else:
+                raise ValueError(f"不支持的 Excel 操作：{kind}")
+        finally:
+            workbook.close()
+    else:
+        if suffix not in WORD_SUFFIXES:
+            raise ValueError("该操作仅支持 DOCX 文档")
+        from docx import Document
+
+        document = Document(source)
+        if kind == "word_clean":
+            operations.append(f"检查 {len(document.paragraphs)} 个正文段落和 {len(document.tables)} 个表格")
+            operations.append("清理首尾空格、空段落和人工分页符，默认保留图片与分节设置")
+        elif kind == "word_replace":
+            old = str(options.get("old", ""))
+            if not old:
+                raise ValueError("请输入要查找的文字")
+            paragraphs = list(document.paragraphs)
+            for table in document.tables:
+                for row in table.rows:
+                    for cell in row.cells:
+                        paragraphs.extend(cell.paragraphs)
+            count = sum(run.text.count(old) for paragraph in paragraphs for run in paragraph.runs)
+            operations.append(f"预计替换 {count} 处“{old[:60]}”")
+            operations.append("结果另存为新 DOCX，不覆盖源文件")
+        elif kind == "word_extract":
+            with zipfile.ZipFile(source) as archive:
+                images = [name for name in archive.namelist() if name.startswith("word/media/") and not name.endswith("/")]
+            operations.append(f"提取 {len(document.tables)} 个表格到 XLSX")
+            operations.append(f"提取 {len(images)} 张原始图片到独立文件夹")
+        else:
+            raise ValueError(f"不支持的 Word 操作：{kind}")
+    return {"result": "执行前预览", "operations": operations, "warnings": warnings, "preview": True, "source_preserved": True}
+
+
+def _copy_cell(source_cell, target_cell) -> None:
+    target_cell.value = source_cell.value
+    if source_cell.has_style:
+        target_cell.font = copy(source_cell.font)
+        target_cell.fill = copy(source_cell.fill)
+        target_cell.border = copy(source_cell.border)
+        target_cell.alignment = copy(source_cell.alignment)
+        target_cell.number_format = source_cell.number_format
+        target_cell.protection = copy(source_cell.protection)
+
+
+def _excel_split(source: Path, output_dir: str) -> dict:
+    from openpyxl import Workbook, load_workbook
+
+    workbook = load_workbook(source, data_only=False, keep_vba=source.suffix.lower() == ".xlsm")
+    directory = _output_path(source, output_dir, "拆分").with_suffix("")
+    directory.mkdir(parents=True, exist_ok=True)
+    outputs = []
+    try:
+        for source_sheet in workbook.worksheets:
+            target_book = Workbook()
+            target_sheet = target_book.active
+            target_sheet.title = source_sheet.title
+            for row in source_sheet.iter_rows():
+                for cell in row:
+                    _copy_cell(cell, target_sheet[cell.coordinate])
+            for key, dimension in source_sheet.column_dimensions.items():
+                target_sheet.column_dimensions[key].width = dimension.width
+            safe_name = re.sub(r'[\\/:*?"<>|]', "_", source_sheet.title).strip() or "Sheet"
+            output = _unique_path(directory / f"{safe_name}.xlsx")
+            target_book.save(output)
+            target_book.close()
+            outputs.append(str(output))
+    finally:
+        workbook.close()
+    return {"result": f"已拆分 {len(outputs)} 个工作表", "output": str(directory), "outputs": outputs, "operations": [f"生成 {Path(item).name}" for item in outputs], "source_preserved": True}
+
+
+def _excel_merge_sheets(source: Path, output_dir: str) -> dict:
+    from openpyxl import Workbook, load_workbook
+
+    source_book = load_workbook(source, data_only=False, keep_vba=source.suffix.lower() == ".xlsm")
+    target_book = Workbook()
+    target = target_book.active
+    target.title = "合并结果"
+    written = 0
+    sheet_count = len(source_book.sheetnames)
+    try:
+        first_sheet = source_book.worksheets[0]
+        headers = [cell.value for cell in first_sheet[1]] if first_sheet.max_row else []
+        target.append(["来源工作表", *headers])
+        for sheet in source_book.worksheets:
+            for row in sheet.iter_rows(min_row=2, values_only=True):
+                target.append([sheet.title, *row])
+                written += 1
+        output = _output_path(source, output_dir, "合并工作表").with_suffix(".xlsx")
+        target_book.save(output)
+    finally:
+        source_book.close()
+        target_book.close()
+    return {"result": f"已合并 {sheet_count} 个工作表", "output": str(output), "operations": [f"写入 {written} 行数据", "新增来源工作表列"], "source_preserved": True}
+
+
+def _excel_compare(source: Path, output_dir: str, other_raw: str) -> dict:
+    from openpyxl import Workbook, load_workbook
+
+    other = resolve_office_file(other_raw)
+    if other.suffix.lower() not in EXCEL_SUFFIXES:
+        raise ValueError("对比文件必须是 XLSX/XLSM")
+    left = load_workbook(source, read_only=True, data_only=False)
+    right = load_workbook(other, read_only=True, data_only=False)
+    result_book = Workbook()
+    result = result_book.active
+    result.title = "差异"
+    result.append(["工作表", "单元格", source.name, other.name])
+    differences = 0
+    try:
+        for sheet_name in sorted(set(left.sheetnames) | set(right.sheetnames)):
+            left_sheet = left[sheet_name] if sheet_name in left.sheetnames else None
+            right_sheet = right[sheet_name] if sheet_name in right.sheetnames else None
+            max_row = min(max(left_sheet.max_row if left_sheet else 0, right_sheet.max_row if right_sheet else 0), 100_000)
+            max_column = min(max(left_sheet.max_column if left_sheet else 0, right_sheet.max_column if right_sheet else 0), 2_000)
+            if max_row * max_column > 2_000_000:
+                raise ValueError(f"工作表 {sheet_name} 超过 200 万个待比较单元格，请先缩小数据范围")
+            for row in range(1, max_row + 1):
+                for column in range(1, max_column + 1):
+                    left_value = left_sheet.cell(row, column).value if left_sheet else None
+                    right_value = right_sheet.cell(row, column).value if right_sheet else None
+                    if left_value != right_value:
+                        coordinate = result.cell(row=1, column=column).column_letter + str(row)
+                        result.append([sheet_name, coordinate, left_value, right_value])
+                        differences += 1
+                        if differences >= 200_000:
+                            raise ValueError("差异超过 200000 项，请缩小对比范围")
+        output = _output_path(source, output_dir, "差异对比").with_suffix(".xlsx")
+        result_book.save(output)
+    finally:
+        left.close(); right.close(); result_book.close()
+    return {"result": f"发现 {differences} 项差异", "output": str(output), "operations": [f"对比文件：{other.name}", f"记录 {differences} 项差异"], "source_preserved": True}
+
+
+def _word_replace_action(source: Path, output_dir: str, options: dict) -> dict:
+    old, new = str(options.get("old", "")), str(options.get("new", ""))
+    if not old:
+        raise ValueError("请输入要查找的文字")
+    return execute_office_plan(source, output_dir, {"summary": "Word 批量替换", "operations": [{"type": "replace_text", "old": old, "new": new}]})
+
+
+def _word_extract(source: Path, output_dir: str) -> dict:
+    from docx import Document
+    from openpyxl import Workbook
+
+    base = _output_path(source, output_dir, "提取内容").with_suffix("")
+    base.mkdir(parents=True, exist_ok=True)
+    document = Document(source)
+    outputs: list[str] = []
+    if document.tables:
+        workbook = Workbook()
+        workbook.remove(workbook.active)
+        for index, table in enumerate(document.tables, start=1):
+            sheet = workbook.create_sheet(f"表格{index}")
+            for row in table.rows:
+                sheet.append([cell.text for cell in row.cells])
+        table_output = base / "表格.xlsx"
+        workbook.save(table_output)
+        workbook.close()
+        outputs.append(str(table_output))
+    image_count = 0
+    with zipfile.ZipFile(source) as archive:
+        for member in archive.infolist():
+            if not member.filename.startswith("word/media/") or member.is_dir():
+                continue
+            image_count += 1
+            name = Path(member.filename).name
+            target = _unique_path(base / name)
+            with archive.open(member) as input_stream, target.open("wb") as output_stream:
+                shutil.copyfileobj(input_stream, output_stream)
+            outputs.append(str(target))
+    return {"result": f"已提取 {len(document.tables)} 个表格和 {image_count} 张图片", "output": str(base), "outputs": outputs, "operations": [f"生成 {Path(item).name}" for item in outputs], "source_preserved": True}
+
+
+def execute_office_local_action(source: Path, output_dir: str, kind: str, options: dict) -> dict:
+    if kind in {"excel_clean", "word_clean"}:
+        return clean_office(source, output_dir, kind, options)
+    if kind == "excel_split":
+        return _excel_split(source, output_dir)
+    if kind == "excel_merge_sheets":
+        return _excel_merge_sheets(source, output_dir)
+    if kind == "excel_compare":
+        return _excel_compare(source, output_dir, str(options.get("other_file", "")))
+    if kind == "word_replace":
+        return _word_replace_action(source, output_dir, options)
+    if kind == "word_extract":
+        return _word_extract(source, output_dir)
+    raise ValueError(f"不支持的 Office 操作：{kind}")
 
 
 def execute_office_plan(source: Path, output_dir: str, plan: dict) -> dict:

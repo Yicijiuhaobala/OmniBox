@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import {
-  ArrowLeft, ArrowRight, Check, Clipboard, FileImage, FileSpreadsheet, FileText, FolderOpen, KeyRound,
-  LoaderCircle, Play, Sparkles, Trash2, Volume2,
+  ArrowLeft, ArrowRight, Check, Clipboard, Download, FileImage, FileInput, FileSpreadsheet, FileText, FolderOpen, KeyRound,
+  LoaderCircle, Play, Presentation, Save, Sparkles, Trash2, Volume2,
 } from 'lucide-react'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
@@ -17,6 +17,7 @@ import typescript from 'highlight.js/lib/languages/typescript'
 import xml from 'highlight.js/lib/languages/xml'
 import 'highlight.js/styles/github-dark-dimmed.css'
 import { api } from './api'
+import VisionComponentCard from './VisionComponentCard'
 
 
 Object.entries({ bash, css, javascript, json, markdown, python, typescript, xml }).forEach(([name, grammar]) => hljs.registerLanguage(name, grammar))
@@ -160,6 +161,7 @@ function CodeTool({ tool, configured, openSettings, goHome }) {
   const [output, setOutput] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [visionReady, setVisionReady] = useState(false)
   const run = async () => {
     if (!(mode === 'ai' ? context : text).trim()) return setError(mode === 'ai' ? '请描述业务语义' : '请输入代码或名称')
     setLoading(true); setError(''); setOutput('')
@@ -202,6 +204,7 @@ function OCRTool({ tool, configured, openSettings, goHome }) {
   }
   const run = async () => {
     if (!files.length) return setError('请先选择图片')
+    if (mode === 'local' && !visionReady) return setError('请先下载并启用本地视觉组件')
     setLoading(true); setError(''); setOutput('')
     try {
       if (mode === 'local') {
@@ -217,9 +220,10 @@ function OCRTool({ tool, configured, openSettings, goHome }) {
   }
   return <Page tool={tool} goHome={goHome}>
     <ModeTabs mode={mode} setMode={setMode} configured={configured} openSettings={openSettings} />
+    {mode === 'local' && <VisionComponentCard onReadyChange={setVisionReady} />}
     <div className="hybrid-grid">
       <section className="workspace-card hybrid-input-panel">
-        <div className="panel-heading"><div><strong>选择图片</strong><span>{mode === 'local' ? '本地 ONNX 引擎，不上传图片' : '图片会发送至你配置的多模态模型'}</span></div><button className="secondary-button compact" onClick={choose}><FileImage size={15} />添加图片</button></div>
+        <div className="panel-heading"><div><strong>选择图片</strong><span>{mode === 'local' ? '组件安装后使用本地 ONNX 引擎，不上传图片' : '图片会发送至你配置的多模态模型'}</span></div><button className="secondary-button compact" onClick={choose}><FileImage size={15} />添加图片</button></div>
         <div className={`ocr-file-list ${files.length ? '' : 'empty'}`} onClick={!files.length ? choose : undefined}>
           {!files.length ? <><FileImage size={25} /><strong>PNG、JPG、WebP、BMP、TIFF</strong><span>可一次选择多张图片</span></> : files.map((path) => <div key={path}><FileImage size={16} /><span><strong>{fileName(path)}</strong><small>{path}</small></span><button onClick={() => setFiles(files.filter((item) => item !== path))}><Trash2 size={14} /></button></div>)}
         </div>
@@ -233,6 +237,8 @@ function OCRTool({ tool, configured, openSettings, goHome }) {
 
 function MarkdownTool({ tool, configured, openSettings, goHome }) {
   const [text, setText] = useState('# 新文档\n\n开始写作。')
+  const [filePath, setFilePath] = useState('')
+  const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const previewRef = useRef(null)
@@ -249,6 +255,38 @@ function MarkdownTool({ tool, configured, openSettings, goHome }) {
       else setText((current) => `> ${data.result.replaceAll('\n', '\n> ')}\n\n${current}`)
     } catch (err) { setError(err.message) } finally { setLoading(false) }
   }
+  const title = text.match(/^#\s+(.+)$/m)?.[1] || fileName(filePath || 'Markdown 文档').replace(/\.(?:md|markdown|txt)$/i, '')
+  const openMarkdown = async () => {
+    if (!window.desktop?.openMarkdown) return setError('请在 OmniBox 桌面应用中打开 Markdown 文件')
+    const result = await window.desktop.openMarkdown()
+    if (result?.error) return setError(result.error)
+    if (!result?.canceled) { setText(result.content); setFilePath(result.path); setError(''); setMessage(`已打开：${result.path}`) }
+  }
+  const saveMarkdown = async () => {
+    const result = await window.desktop?.saveMarkdown?.({ suggestedName: title, content: text, format: 'md' })
+    if (result?.error) return setError(result.error)
+    if (!result?.canceled) { setFilePath(result.path); setError(''); setMessage(`已保存副本：${result.path}`) }
+  }
+  const exportHtml = async () => {
+    const documentHtml = `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title><style>body{max-width:860px;margin:48px auto;padding:0 24px;color:#20252a;font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif}img{max-width:100%}table{width:100%;border-collapse:collapse}th,td{border:1px solid #d5d9dd;padding:7px 9px;text-align:left}pre{overflow:auto;background:#f4f6f8;padding:14px;border-radius:7px}code{font-family:ui-monospace,monospace}blockquote{color:#59636d;border-left:3px solid #aab3bb;margin-left:0;padding-left:14px}</style></head><body>${html}</body></html>`
+    const result = await window.desktop?.saveMarkdown?.({ suggestedName: title, content: documentHtml, format: 'html' })
+    if (result?.error) return setError(result.error)
+    if (!result?.canceled) setMessage(`已导出：${result.path}`)
+  }
+  const exportDocx = async () => {
+    setLoading(true); setError('')
+    try { const result = await api.markdownDocx({ markdown: text, title }); setMessage(`已导出：${result.output}`) } catch (err) { setError(err.message) } finally { setLoading(false) }
+  }
+  const exportPptx = async () => {
+    if (!window.desktop?.exportPresentation) return setError('请在 OmniBox 桌面应用中导出 PPTX')
+    setLoading(true); setError('')
+    try {
+      const deck = await api.extractPresentation({ markdown: text, title, max_slides: 30 })
+      const result = await window.desktop.exportPresentation({ deck, style: 'executive', format: 'pptx' })
+      if (result?.error) throw new Error(result.error)
+      if (!result?.canceled) setMessage(`已导出：${result.path}`)
+    } catch (err) { setError(err.message) } finally { setLoading(false) }
+  }
   const exportPdf = async () => {
     if (!window.desktop?.exportMarkdownPdf) return setError('请在 OmniBox 桌面应用中导出 PDF')
     const title = text.match(/^#\s+(.+)$/m)?.[1] || 'Markdown 文档'
@@ -257,16 +295,22 @@ function MarkdownTool({ tool, configured, openSettings, goHome }) {
   }
   return <Page tool={tool} goHome={goHome}>
     <div className="markdown-toolbar">
-      <div><button className="secondary-button compact" onClick={exportPdf}><FileText size={14} />导出 PDF</button><span>本地实时预览 · 支持语法高亮</span></div>
+      <div className="markdown-file-actions"><button className="secondary-button compact" onClick={openMarkdown}><FileInput size={14} />打开</button><button className="secondary-button compact" onClick={saveMarkdown}><Save size={14} />另存 MD</button><button className="secondary-button compact" onClick={exportHtml}><Download size={14} />HTML</button><button className="secondary-button compact" onClick={exportPdf}><FileText size={14} />PDF</button><button className="secondary-button compact" disabled={loading} onClick={exportDocx}><FileText size={14} />Word</button><button className="secondary-button compact" disabled={loading} onClick={exportPptx}><Presentation size={14} />PPTX</button></div>
       <div><button disabled={loading} onClick={() => aiAction('continue')}><Sparkles size={13} />续写</button><button disabled={loading} onClick={() => aiAction('toc')}>生成目录</button><button disabled={loading} onClick={() => aiAction('summary')}>生成摘要</button></div>
     </div>
-    {error && <div className="error-message markdown-error">{error}</div>}
+    <div className="markdown-file-meta"><span>{filePath || '尚未关联本地文件'}</span><span>默认另存副本，不覆盖源文件</span></div>
+    {error && <div className="error-message markdown-error">{error}</div>}{message && <div className="success-message markdown-error">{message}</div>}
     <div className="markdown-workspace">
       <section><div className="editor-label"><span>Markdown</span><span>{text.length} 字符</span></div><textarea value={text} onChange={(e) => setText(e.target.value)} spellCheck="false" /></section>
       <section><div className="editor-label"><span>预览</span><span>{loading ? 'AI 正在处理…' : '即时更新'}</span></div><article ref={previewRef} className="markdown-preview" dangerouslySetInnerHTML={{ __html: html }} /></section>
     </div>
   </Page>
 }
+
+const OFFICE_ACTIONS = [
+  ['formula', '白话生成公式'], ['excel_clean', 'Excel 清理'], ['excel_split', '拆分工作表'], ['excel_merge_sheets', '合并工作表'],
+  ['excel_compare', '工作簿对比'], ['word_clean', 'Word 清理'], ['word_replace', '批量替换'], ['word_extract', '提取表格/图片'], ['ai_process', '按描述处理'],
+]
 
 function OfficeTool({ tool, configured, openSettings, goHome }) {
   const [action, setAction] = useState('formula')
@@ -278,55 +322,95 @@ function OfficeTool({ tool, configured, openSettings, goHome }) {
     trim_whitespace: true, remove_empty_paragraphs: true, remove_manual_page_breaks: true, remove_empty_table_rows: false,
   })
   const [result, setResult] = useState(null)
+  const [preview, setPreview] = useState(null)
+  const [plans, setPlans] = useState([])
+  const [selectedPlan, setSelectedPlan] = useState('')
+  const [planName, setPlanName] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const isAI = action === 'formula' || action === 'ai_process'
+  const isWord = action.startsWith('word_')
+  useEffect(() => {
+    let active = true
+    api.officePlans().then((data) => { if (active) setPlans(data.plans || []) }).catch(() => {})
+    return () => { active = false }
+  }, [])
   const choose = async () => {
     if (!window.desktop?.selectFiles) return setError('请在 OmniBox 桌面应用中选择 Office 文件')
-    const kind = action === 'excel_clean' ? 'excel' : action === 'word_clean' ? 'word' : 'office'
+    const kind = isWord ? 'word' : action === 'ai_process' ? 'office' : 'excel'
     const selected = await window.desktop.selectFiles(kind)
-    if (selected.length) { setFile(selected[0]); setError('') }
+    if (selected.length) { setFile(selected[0]); setPreview(null); setResult(null); setError('') }
+  }
+  const chooseCompare = async () => {
+    const selected = await window.desktop?.selectFiles?.('excel')
+    if (selected?.[0]) setOptions((current) => ({ ...current, other_file: selected[0] }))
+    setPreview(null)
   }
   const chooseOutput = async () => {
     const selected = await window.desktop?.selectDirectory?.()
     if (selected) setOutputDir(selected)
   }
   const switchAction = (value) => {
-    setAction(value); setResult(null); setError('')
+    setAction(value); setResult(null); setPreview(null); setError('')
     if (value === 'formula') setInstruction('帮我在 A 列找和 B 列相同的名字，把 C 列对应的数值相加')
     if (value === 'ai_process') setInstruction('删除空白行，清理文本首尾空格，并在 D 列填入汇总公式')
   }
-  const toggleOption = (key) => setOptions((current) => ({ ...current, [key]: !current[key] }))
-  const run = async () => {
+  const toggleOption = (key) => { setOptions((current) => ({ ...current, [key]: !current[key] })); setPreview(null) }
+  const updateOption = (key, value) => { setOptions((current) => ({ ...current, [key]: value })); setPreview(null) }
+  const savePlan = async () => {
+    if (action === 'formula') return setError('公式生成不属于文件批处理，不能保存为处理方案')
+    if (!planName.trim()) return setError('请输入方案名称')
+    setError('')
+    try {
+      const data = await api.saveOfficePlan({ name: planName, action, instruction, options })
+      setPlans(data.plans || []); setSelectedPlan(data.plan.id); setPlanName(''); setResult(null)
+    } catch (err) { setError(err.message) }
+  }
+  const applyPlan = () => {
+    const plan = plans.find((item) => item.id === selectedPlan)
+    if (!plan) return setError('请选择要应用的方案')
+    setAction(plan.action); setInstruction(plan.instruction || ''); setOptions((current) => ({ ...current, ...(plan.options || {}) })); setPreview(null); setResult(null); setError('')
+  }
+  const deletePlan = async () => {
+    if (!selectedPlan) return
+    try { const data = await api.deleteOfficePlan(selectedPlan); setPlans(data.plans || []); setSelectedPlan('') } catch (err) { setError(err.message) }
+  }
+  const run = async (confirm = false) => {
     if (isAI && !configured) return openSettings()
     if (action === 'formula' && !instruction.trim()) return setError('请描述需要生成的 Excel 公式')
     if (action !== 'formula' && !file) return setError('请先选择要处理的 Office 文件')
     if (action === 'ai_process' && !instruction.trim()) return setError('请描述希望如何处理文件')
-    setLoading(true); setError(''); setResult(null)
+    if (action === 'excel_compare' && !options.other_file) return setError('请选择用于对比的第二个工作簿')
+    if (action === 'word_replace' && !String(options.old || '').trim()) return setError('请输入要查找的文字')
+    setLoading(true); setError(''); if (!confirm) setResult(null)
     try {
       const data = action === 'formula'
         ? await api.officeFormula({ instruction, file })
-        : await api.officeProcess({ action, file, instruction, output_dir: outputDir, options })
-      setResult(data)
+        : await api.officeProcess({ action, file, instruction, output_dir: outputDir, options, preview_only: !confirm, plan: confirm ? preview?.plan : undefined })
+      if (action === 'formula' || confirm) { setResult(data); if (confirm) setPreview(null) } else setPreview(data)
     } catch (err) { setError(err.message) } finally { setLoading(false) }
   }
-  const resultText = result ? [result.result, ...(result.operations || []).map((item) => `- ${item}`)].join('\n') : ''
+  const display = result || preview
+  const resultText = display ? [display.result, ...(display.operations || []).map((item) => `- ${typeof item === 'string' ? item : JSON.stringify(item)}`), ...(display.warnings || []).map((item) => `注意：${item}`)].join('\n') : ''
   const resultActions = result?.output ? <button onClick={() => window.desktop?.showItemInFolder?.(result.output)}><FolderOpen size={14} />打开文件位置</button> : null
   return <Page tool={tool} goHome={goHome}>
-    <div className="action-tabs office-tabs"><button className={action === 'formula' ? 'active' : ''} onClick={() => switchAction('formula')}>白话生成公式</button><button className={action === 'excel_clean' ? 'active' : ''} onClick={() => switchAction('excel_clean')}>Excel 本地清理</button><button className={action === 'word_clean' ? 'active' : ''} onClick={() => switchAction('word_clean')}>Word 本地清理</button><button className={action === 'ai_process' ? 'active' : ''} onClick={() => switchAction('ai_process')}><Sparkles size={13} />按描述处理文件</button></div>
+    <div className="action-tabs office-tabs">{OFFICE_ACTIONS.map(([value, label]) => <button key={value} className={action === value ? 'active' : ''} onClick={() => switchAction(value)}>{value === 'ai_process' && <Sparkles size={13} />}{label}</button>)}</div>
+    <div className="office-plan-bar"><div><select value={selectedPlan} onChange={(event) => setSelectedPlan(event.target.value)}><option value="">选择已保存方案</option>{plans.map((plan) => <option key={plan.id} value={plan.id}>{plan.name} · {OFFICE_ACTIONS.find(([value]) => value === plan.action)?.[1] || plan.action}</option>)}</select><button className="secondary-button compact" disabled={!selectedPlan} onClick={applyPlan}>应用方案</button><button className="office-plan-delete" disabled={!selectedPlan} onClick={deletePlan}><Trash2 size={13} /></button></div><div><input value={planName} onChange={(event) => setPlanName(event.target.value)} placeholder="输入方案名称，如：月报清理" /><button className="secondary-button compact" disabled={action === 'formula'} onClick={savePlan}><Save size={13} />保存当前方案</button></div></div>
     <div className="hybrid-grid office-grid">
       <section className="workspace-card hybrid-input-panel office-input-panel">
         {isAI && !configured && <button className="config-notice service-notice" onClick={openSettings}><KeyRound size={17} /><span><strong>需要连接模型</strong>公式生成和自然语言处理需要 AI API Key</span><ArrowRight size={16} /></button>}
-        <div className="panel-heading"><div><strong>{action === 'formula' ? '工作簿（可选）' : '选择源文件'}</strong><span>{action === 'formula' ? '附加工作簿后会读取表名、少量样例和公式用于生成准确引用' : '始终另存副本，不覆盖源文件'}</span></div><button className="secondary-button compact" onClick={choose}>{action === 'word_clean' ? <FileText size={15} /> : <FileSpreadsheet size={15} />}{file ? '重新选择' : '选择文件'}</button></div>
-        <div className={`office-file ${file ? 'selected' : ''}`} onClick={!file ? choose : undefined}>{file ? <><div><strong>{fileName(file)}</strong><small>{file}</small></div><button onClick={() => setFile('')}><Trash2 size={14} /></button></> : <><FileSpreadsheet size={24} /><span>{action === 'word_clean' ? 'DOCX' : action === 'excel_clean' || action === 'formula' ? 'XLSX / XLSM' : 'XLSX / XLSM / DOCX'}</span></>}</div>
+        <div className="panel-heading"><div><strong>{action === 'formula' ? '工作簿（可选）' : '选择源文件'}</strong><span>{action === 'formula' ? '附加工作簿后会读取表名、少量样例和公式用于生成准确引用' : '先预览操作和影响范围，确认后另存副本'}</span></div><button className="secondary-button compact" onClick={choose}>{isWord ? <FileText size={15} /> : <FileSpreadsheet size={15} />}{file ? '重新选择' : '选择文件'}</button></div>
+        <div className={`office-file ${file ? 'selected' : ''}`} onClick={!file ? choose : undefined}>{file ? <><div><strong>{fileName(file)}</strong><small>{file}</small></div><button onClick={() => { setFile(''); setPreview(null) }}><Trash2 size={14} /></button></> : <><FileSpreadsheet size={24} /><span>{isWord ? 'DOCX' : action === 'ai_process' ? 'XLSX / XLSM / DOCX' : 'XLSX / XLSM'}</span></>}</div>
         {(action === 'formula' || action === 'ai_process') && <label className="editor-block office-instruction"><div className="editor-label"><span>{action === 'formula' ? '白话需求' : '处理要求'}</span><span>{instruction.length} 字符</span></div><textarea value={instruction} onChange={(event) => setInstruction(event.target.value)} placeholder={action === 'formula' ? '描述要查找、汇总或匹配的数据…' : '例如：清理空白行并在结果列添加公式…'} /></label>}
         {action === 'excel_clean' && <div className="office-options">{[['trim_text', '清理文本首尾空格'], ['remove_blank_rows', '删除完全空白的行'], ['deduplicate_rows', '按整行内容去重（保留首行标题）']].map(([key, label]) => <label className="check-control" key={key}><input type="checkbox" checked={options[key]} onChange={() => toggleOption(key)} /><span><strong>{label}</strong></span></label>)}</div>}
         {action === 'word_clean' && <div className="office-options">{[['trim_whitespace', '清理段落首尾空白'], ['remove_empty_paragraphs', '删除无内容的空段落'], ['remove_manual_page_breaks', '删除人工分页符（常见空白页来源）'], ['remove_empty_table_rows', '删除完全空白的表格行']].map(([key, label]) => <label className="check-control" key={key}><input type="checkbox" checked={options[key]} onChange={() => toggleOption(key)} /><span><strong>{label}</strong></span></label>)}</div>}
+        {action === 'excel_compare' && <div className="office-secondary-file"><div><span>对比工作簿</span><strong title={options.other_file}>{options.other_file ? fileName(options.other_file) : '尚未选择'}</strong></div><button className="secondary-button compact" onClick={chooseCompare}>选择文件</button></div>}
+        {action === 'word_replace' && <div className="office-replace-grid"><label className="control-label"><span>查找文字</span><input value={options.old || ''} onChange={(event) => updateOption('old', event.target.value)} placeholder="需要被替换的内容" /></label><label className="control-label"><span>替换为</span><input value={options.new || ''} onChange={(event) => updateOption('new', event.target.value)} placeholder="留空表示删除" /></label></div>}
         {action !== 'formula' && <div className="output-dir"><div><span>输出位置</span><strong>{outputDir || '自动创建“OmniBox 输出”文件夹'}</strong></div><button className="secondary-button compact" onClick={chooseOutput}>更改</button></div>}
         <div className={`tool-notice ${isAI ? 'warning' : ''}`}>{isAI ? <Sparkles size={15} /> : <Check size={15} />}<span>{isAI ? '只会向模型发送你的描述与有限的文档结构/样例；模型返回白名单计划后由本机执行，不运行任意脚本。' : '完全在本机处理并保留源文件。复杂分页可能与字体、打印机和页面设置有关，建议打开输出文档复核。'}</span></div>
-        <RunRow mode={isAI ? 'ai' : 'local'} run={run} loading={loading} error={error} localText="文件只在本机处理，结果另存为副本" />
+        {error && <div className="error-message">{error}</div>}<div className="run-row"><span>{action === 'formula' ? '内容将发送至配置的模型服务' : preview ? '请核对右侧预览，确认后才会写入新文件' : '第一步只读取文件并生成操作预览'}</span>{preview ? <><button className="secondary-button" onClick={() => setPreview(null)} disabled={loading}>返回修改</button><button className="primary-button" onClick={() => run(true)} disabled={loading}>{loading ? <LoaderCircle className="spin" size={16} /> : <Check size={15} />}确认执行</button></> : <button className="primary-button" onClick={() => run(false)} disabled={loading}>{loading ? <LoaderCircle className="spin" size={16} /> : <Play size={15} />}{action === 'formula' ? '生成公式' : '预览处理'}</button>}</div>
       </section>
-      <Result output={resultText} loading={loading} copy={copyText} meta={result?.output ? `输出：${result.output}` : action === 'formula' ? '公式与使用说明' : ''} actions={resultActions} />
+      <Result output={resultText} loading={loading} copy={copyText} meta={result?.output ? `输出：${result.output}` : preview ? '执行前预览 · 尚未写入文件' : action === 'formula' ? '公式与使用说明' : ''} actions={resultActions} />
     </div>
   </Page>
 }
