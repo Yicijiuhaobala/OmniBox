@@ -68,7 +68,9 @@ kbd { color: #656a77; border: 1px solid #2d3039; background: #191b22; border-rad
 .icon-button:hover { color: #c5c8d1; background: rgba(255,255,255,.05); border-color: var(--line); }
 .service-status { display: flex; align-items: center; gap: 6px; color: #727783; font-size: 9px; margin-right: 8px; }
 .service-status span { width: 6px; height: 6px; background: #7e4d4d; border-radius: 50%; box-shadow: 0 0 0 3px rgba(126,77,77,.1); }
+.service-status.starting span { background: #c28a48; box-shadow: 0 0 0 3px rgba(194,138,72,.1); animation: service-pulse 1.2s ease-in-out infinite; }
 .service-status.online span { background: #4eb88a; box-shadow: 0 0 0 3px rgba(78,184,138,.09); }
+@keyframes service-pulse { 50% { opacity: .45; } }
 .mobile-menu { display: none; }
 
 .page-scroll { height: calc(100vh - 58px); overflow-y: auto; scrollbar-color: #272a33 transparent; }

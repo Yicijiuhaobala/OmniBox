@@ -297,11 +297,7 @@ async function stopProductionApi() {
 async function startLocalApi() {
   apiPort = app.isPackaged ? await findAvailablePort() : 8000
   startProductionApi(apiPort)
-  try {
-    await waitForApi(`http://127.0.0.1:${apiPort}/api/health`)
-  } catch (error) {
-    console.error(error)
-  }
+  waitForApi(`http://127.0.0.1:${apiPort}/api/health`).catch((error) => console.error(error))
 }
 
 async function createWindow() {
@@ -339,7 +335,7 @@ async function createWindow() {
 }
 
 app.whenReady().then(async () => {
-  await clipboardHistory.start()
+  clipboardHistory.start().catch((error) => console.error('Failed to start clipboard history:', error))
   await startLocalApi()
   await createWindow()
 })

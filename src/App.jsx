@@ -30,6 +30,7 @@ function App() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [apiReady, setApiReady] = useState(false)
+  const [apiStarting, setApiStarting] = useState(true)
   const [configured, setConfigured] = useState(false)
   const [translationServices, setTranslationServices] = useState({ youdao: false, baidu: false })
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -47,13 +48,26 @@ function App() {
   }, [theme])
 
   useEffect(() => {
-    Promise.all([api.health(), api.settings()])
-      .then(([, settings]) => {
+    let cancelled = false
+    let retryTimer = null
+    let attempts = 0
+    const connectLocalApi = async () => {
+      try {
+        const [, settings] = await Promise.all([api.health(), api.settings()])
+        if (cancelled) return
         setApiReady(true)
+        setApiStarting(false)
         setConfigured(settings.has_api_key)
         setTranslationServices({ youdao: settings.has_youdao_credentials, baidu: settings.has_baidu_credentials })
-      })
-      .catch(() => setApiReady(false))
+      } catch {
+        if (cancelled) return
+        attempts += 1
+        setApiReady(false)
+        setApiStarting(attempts < 60)
+        retryTimer = window.setTimeout(connectLocalApi, Math.min(2000, 200 + attempts * 100))
+      }
+    }
+    connectLocalApi()
 
     const onKeyDown = (event) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
@@ -66,7 +80,11 @@ function App() {
       }
     }
     window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
+    return () => {
+      cancelled = true
+      if (retryTimer) window.clearTimeout(retryTimer)
+      window.removeEventListener('keydown', onKeyDown)
+    }
   }, [])
 
   const selectTool = (tool) => {
@@ -95,6 +113,7 @@ function App() {
       <main className="main-panel">
         <Topbar
           apiReady={apiReady}
+          apiStarting={apiStarting}
           onMenu={() => setSidebarOpen((value) => !value)}
           onSearch={() => setSearchOpen(true)}
           onSettings={() => setSettingsOpen(true)}
@@ -189,14 +208,14 @@ function SidebarTool({ tool, onClick }) {
   return <button className="nav-item" onClick={onClick}><Icon size={17} /><span>{tool.title}</span>{tool.type === 'hybrid' ? <span className="mini-ai">双模式</span> : (tool.type === 'ai' || tool.requiresAI) && <span className="mini-ai">模型</span>}</button>
 }
 
-function Topbar({ apiReady, onMenu, onSearch, onSettings, theme, onToggleTheme }) {
+function Topbar({ apiReady, apiStarting, onMenu, onSearch, onSettings, theme, onToggleTheme }) {
   return (
     <header className="topbar">
       <button className="icon-button mobile-menu" onClick={onMenu}><Menu size={18} /></button>
       <div className="history-buttons"><button disabled><ArrowLeft size={16} /></button><button disabled><ArrowRight size={16} /></button></div>
       <button className="top-search" onClick={onSearch}><Search size={15} /><span>快速找到你需要的工具</span></button>
       <div className="top-actions">
-        <div className={`service-status ${apiReady ? 'online' : ''}`}><span />{apiReady ? '本地服务正常' : '服务未连接'}</div>
+        <div className={`service-status ${apiReady ? 'online' : apiStarting ? 'starting' : ''}`}><span />{apiReady ? '本地服务正常' : apiStarting ? '本地服务启动中' : '服务未连接'}</div>
         <button className="icon-button theme-toggle" onClick={onToggleTheme} aria-label={theme === 'dark' ? '切换到白天模式' : '切换到黑夜模式'} title={theme === 'dark' ? '白天模式' : '黑夜模式'}>{theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}</button>
         <button className="icon-button" onClick={onSettings}><Settings size={17} /></button>
       </div>
